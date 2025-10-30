@@ -1,0 +1,3 @@
+zainstalować rust: https://rust-lang.org/tools/install/
+
+$ cargo run --release
