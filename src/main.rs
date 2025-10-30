@@ -3,6 +3,7 @@
 use crate::app::PolygonApp;
 
 mod app;
+mod canvas;
 
 fn main() -> eframe::Result {
     let app = PolygonApp::default();

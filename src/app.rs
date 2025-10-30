@@ -1,10 +1,16 @@
 use eframe::egui;
 
-pub struct PolygonApp;
+use crate::canvas::Canvas;
+
+pub struct PolygonApp {
+    canvas: Canvas,
+}
 
 impl Default for PolygonApp {
     fn default() -> Self {
-        Self
+        Self {
+            canvas: Canvas::new(600, 600),
+        }
     }
 }
 
@@ -22,10 +28,23 @@ impl eframe::App for PolygonApp {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            let (response, painter) =
-                ui.allocate_painter(ui.available_size(), egui::Sense::click_and_drag());
+        self.canvas.clear(None);
 
+        let t = ctx.input(|i| i.time) as f32;
+        for y in 0..self.canvas.height() {
+            for x in 0..self.canvas.width() {
+                let r = ((x as f32 * 0.5 + t).sin() * 127.0 + 128.0) as u8;
+                let g = ((y as f32 * 0.5 + t).cos() * 127.0 + 128.0) as u8;
+                self.canvas.put_pixel(x, y, [r, g, 255 - r, 255]);
+            }
+        }
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            // let (response, painter) =
+            //     ui.allocate_painter(ui.available_size(), egui::Sense::click_and_drag());
+
+            self.canvas.draw(ui, ctx);
         });
+        ctx.request_repaint(); // TODO: temporary
     }
 }
