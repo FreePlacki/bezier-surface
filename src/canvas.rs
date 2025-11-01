@@ -1,4 +1,4 @@
-use eframe::egui::{self, TextureOptions};
+use eframe::egui::{self, pos2, Rect, TextureOptions};
 
 pub struct Canvas {
     width: usize,
@@ -43,18 +43,18 @@ impl Canvas {
         }
     }
 
-    pub fn draw(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+    pub fn draw(&mut self, ui: &mut egui::Ui) {
         let img = egui::ColorImage::from_rgba_unmultiplied([self.width, self.height], &self.buffer);
         match &mut self.texture {
             Some(tex) => tex.set(img, TextureOptions::default()),
             None => {
-                self.texture = Some(ctx.load_texture("surface", img, Default::default()));
+                self.texture = Some(ui.ctx().load_texture("surface", img, Default::default()));
             }
         }
         let tex = self.texture.as_ref().unwrap();
 
         let painter = ui.painter();
-        let rect = ui.max_rect();
+        let rect = Rect::from_min_max(pos2(0.0, 0.0), pos2(self.width as f32, self.height as f32));
         painter.image(
             tex.id(),
             rect,
@@ -64,9 +64,5 @@ impl Canvas {
             ),
             egui::Color32::WHITE,
         );
-    }
-
-    pub fn buffer_mut(&mut self) -> &mut [u8] {
-        &mut self.buffer
     }
 }

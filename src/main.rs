@@ -4,9 +4,12 @@ use crate::app::PolygonApp;
 
 mod app;
 mod canvas;
+mod point;
+mod surface;
+mod scene;
 
 fn main() -> eframe::Result {
-    let app = PolygonApp::default();
+    let app = PolygonApp::new();
 
     let mut native_options = eframe::NativeOptions::default();
     native_options.viewport = native_options.viewport.with_maximized(true);

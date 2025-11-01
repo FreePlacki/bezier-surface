@@ -1,15 +1,27 @@
-use eframe::egui;
+use std::process::exit;
 
-use crate::canvas::Canvas;
+use eframe::egui::{self};
+
+use crate::{canvas::Canvas, scene::Scene};
 
 pub struct PolygonApp {
     canvas: Canvas,
+    scene: Scene,
 }
 
-impl Default for PolygonApp {
-    fn default() -> Self {
-        Self {
-            canvas: Canvas::new(600, 600),
+impl PolygonApp {
+    pub fn new() -> Self {
+        let fname = "points.txt";
+        let scene = Scene::from_file(fname);
+        match scene {
+            Err(e) => {
+                eprintln!("{e}");
+                exit(1)
+            }
+            Ok(scene) => Self {
+                canvas: Canvas::new(600, 600),
+                scene,
+            },
         }
     }
 }
@@ -40,10 +52,8 @@ impl eframe::App for PolygonApp {
         }
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // let (response, painter) =
-            //     ui.allocate_painter(ui.available_size(), egui::Sense::click_and_drag());
-
-            self.canvas.draw(ui, ctx);
+            self.canvas.draw(ui);
+            self.scene.draw(ui, &mut self.canvas);
         });
         ctx.request_repaint(); // TODO: temporary
     }
