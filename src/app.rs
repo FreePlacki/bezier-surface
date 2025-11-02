@@ -42,14 +42,14 @@ impl eframe::App for PolygonApp {
 
         self.canvas.clear(None);
 
-        let t = ctx.input(|i| i.time) as f32;
-        for y in 0..self.canvas.height() {
-            for x in 0..self.canvas.width() {
-                let r = ((x as f32 * 0.5 + t).sin() * 127.0 + 128.0) as u8;
-                let g = ((y as f32 * 0.5 + t).cos() * 127.0 + 128.0) as u8;
-                self.canvas.put_pixel(x, y, [r, g, 255 - r, 255]);
-            }
-        }
+        // let t = ctx.input(|i| i.time) as f32;
+        // for y in 0..self.canvas.height() {
+        //     for x in 0..self.canvas.width() {
+        //         let r = ((x as f32 * 0.5 + t).sin() * 127.0 + 128.0) as u8;
+        //         let g = ((y as f32 * 0.5 + t).cos() * 127.0 + 128.0) as u8;
+        //         self.canvas.put_pixel(x, y, [r, g, 255 - r, 255]);
+        //     }
+        // }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.canvas.draw(ui);

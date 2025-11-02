@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use eframe::egui::{Pos2, pos2};
+
 use crate::canvas::Canvas;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -25,9 +27,13 @@ impl Point3 {
     pub fn to_screen(&self, canvas: &Canvas) -> Self {
         Self {
             x: self.x + (canvas.width() as f32) * 0.5,
-            y: self.y + (canvas.height() as f32) * 0.5,
+            y: -self.y + (canvas.height() as f32) * 0.5,
             z: self.z,
         }
+    }
+
+    pub fn projection(&self) -> Pos2 {
+        pos2(self.x, self.y)
     }
 }
 
@@ -57,5 +63,18 @@ impl FromStr for Point3 {
         }
 
         Ok(Self { x, y, z })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Triangle {
+    pub p0: Point3,
+    pub p1: Point3,
+    pub p2: Point3,
+}
+
+impl Triangle {
+    pub fn new(p0: Point3, p1: Point3, p2: Point3) -> Self {
+        Self { p0, p1, p2 }
     }
 }
