@@ -1,6 +1,6 @@
-use std::{fs::File, io::Read, str::FromStr};
+use std::{f32::consts::FRAC_PI_2, fs::File, io::Read, str::FromStr};
 
-use eframe::egui;
+use eframe::egui::{self, Painter, Response};
 
 use crate::{
     canvas::Canvas,
@@ -39,21 +39,26 @@ impl Scene {
     }
 
     pub fn rotate_ox(&mut self, delta: f32) {
-        self.rot_ox += delta;
+        let new_rot = (self.rot_ox + delta).clamp(-FRAC_PI_2, FRAC_PI_2);
+        if (new_rot - self.rot_ox).abs() < 1e-3 {
+            return;
+        }
+        self.rot_ox = new_rot;
         self.surface.rotate_ox(delta);
         self.mesh.rotate_ox(delta);
     }
 
     pub fn rotate_oz(&mut self, delta: f32) {
-        self.rot_oz += delta;
+        let new_rot = (self.rot_oz + delta).clamp(-FRAC_PI_2, FRAC_PI_2);
+        if (new_rot - self.rot_oz).abs() < 1e-3 {
+            return;
+        }
+        self.rot_oz = new_rot;
         self.surface.rotate_oz(delta);
         self.mesh.rotate_oz(delta);
     }
 
-    pub fn draw(&self, ui: &mut egui::Ui, canvas: &mut Canvas) {
-        let (response, painter) =
-            ui.allocate_painter(ui.available_size(), egui::Sense::click_and_drag());
-
+    pub fn draw(&self, canvas: &mut Canvas, response: &Response, painter: &Painter) {
         self.mesh.draw(canvas, &painter);
         self.surface.draw_points(canvas, &painter);
     }
