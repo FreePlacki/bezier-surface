@@ -35,6 +35,24 @@ impl Point3 {
     pub fn projection(&self) -> Pos2 {
         pos2(self.x, self.y)
     }
+
+    pub fn rotate_ox(&self, rot: f32) -> Point3 {
+        let (s, c) = (rot.sin(), rot.cos());
+        Self {
+            x: self.x,
+            y: self.y * c - self.z * s,
+            z: self.y * s + self.z * c,
+        }
+    }
+
+    pub fn rotate_oz(&self, rot: f32) -> Point3 {
+        let (s, c) = (rot.sin(), rot.cos());
+        Self {
+            x: self.x * c - self.y * s,
+            y: self.x * s + self.y * c,
+            z: self.z
+        }
+    }
 }
 
 impl FromStr for Point3 {

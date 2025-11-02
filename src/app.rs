@@ -1,6 +1,6 @@
 use std::process::exit;
 
-use eframe::egui::{self};
+use eframe::egui::{self, Slider};
 
 use crate::{canvas::Canvas, scene::Scene};
 
@@ -39,6 +39,20 @@ impl eframe::App for PolygonApp {
                 });
             });
         });
+
+        egui::SidePanel::right("right_panel")
+            .resizable(false)
+            .show(ctx, |ui| {
+                let mut ox = self.scene.rot_ox().to_degrees();
+                ui.label("OX");
+                ui.add(Slider::new(&mut ox, -90.0..=90.0).suffix("°"));
+                self.scene.rotate_ox(ox.to_radians() - self.scene.rot_ox());
+
+                let mut oz = self.scene.rot_oz().to_degrees();
+                ui.label("OZ");
+                ui.add(Slider::new(&mut oz, -90.0..=90.0).suffix("°"));
+                self.scene.rotate_oz(oz.to_radians() - self.scene.rot_oz());
+            });
 
         self.canvas.clear(None);
 

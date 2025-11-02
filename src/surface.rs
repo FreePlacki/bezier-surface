@@ -3,7 +3,7 @@ use std::str::FromStr;
 use eframe::egui::{Color32, Painter, Stroke, pos2};
 
 use crate::{
-    canvas::{self, Canvas},
+    canvas::Canvas,
     point::{Point3, Triangle},
 };
 
@@ -12,6 +12,18 @@ pub struct BezierSurface {
 }
 
 impl BezierSurface {
+    pub fn rotate_ox(&mut self, delta: f32) {
+        self.points
+            .iter_mut()
+            .for_each(|r| r.iter_mut().for_each(|p| *p = p.rotate_ox(delta)));
+    }
+
+    pub fn rotate_oz(&mut self, delta: f32) {
+        self.points
+            .iter_mut()
+            .for_each(|r| r.iter_mut().for_each(|p| *p = p.rotate_oz(delta)));
+    }
+
     pub fn evaluate(&self, u: f32, v: f32) -> Point3 {
         fn bernstein(i: usize, t: f32) -> f32 {
             match i {
@@ -110,6 +122,22 @@ pub struct Mesh {
 impl Mesh {
     pub fn new(triangles: Vec<Triangle>) -> Self {
         Self { triangles }
+    }
+
+    pub fn rotate_ox(&mut self, delta: f32) {
+        self.triangles.iter_mut().for_each(|t| {
+            t.p0 = t.p0.rotate_ox(delta);
+            t.p1 = t.p1.rotate_ox(delta);
+            t.p2 = t.p2.rotate_ox(delta);
+        });
+    }
+
+    pub fn rotate_oz(&mut self, delta: f32) {
+        self.triangles.iter_mut().for_each(|t| {
+            t.p0 = t.p0.rotate_oz(delta);
+            t.p1 = t.p1.rotate_oz(delta);
+            t.p2 = t.p2.rotate_oz(delta);
+        });
     }
 
     pub fn draw(&self, canvas: &Canvas, painter: &Painter) {
