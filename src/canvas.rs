@@ -1,9 +1,12 @@
-use eframe::egui::{self, Context, Painter, Rect, TextureOptions, pos2, vec2};
+use core::f32;
+
+use eframe::egui::{self, Context, Painter, Pos2, Rect, TextureOptions, pos2, vec2};
 
 pub struct Canvas {
     width: usize,
     height: usize,
     buffer: Vec<u8>,
+    depths: Vec<f32>,
     texture: Option<egui::TextureHandle>,
 }
 
@@ -13,6 +16,7 @@ impl Canvas {
             width,
             height,
             buffer: vec![0; width * height * 4],
+            depths: vec![f32::INFINITY; width * height],
             texture: None,
         }
     }
@@ -25,11 +29,15 @@ impl Canvas {
         self.height
     }
 
-    pub fn put_pixel(&mut self, x: usize, y: usize, rgba: [u8; 4]) {
+    pub fn put_pixel(&mut self, x: usize, y: usize, z: f32, rgba: [u8; 4]) {
         debug_assert!(x < self.width && y < self.height);
 
-        let idx = (y * self.width + x) * 4;
-        self.buffer[idx..idx + 4].copy_from_slice(&rgba);
+        let idx = y * self.width + x;
+        if z < self.depths[idx] {
+            self.depths[idx] = z;
+            let bidx = idx * 4;
+            self.buffer[bidx..bidx + 4].copy_from_slice(&rgba);
+        }
     }
 
     pub fn clear(&mut self, rgba: impl Into<Option<[u8; 4]>>) {
@@ -41,6 +49,14 @@ impl Canvas {
             }
             None => self.buffer.fill(0),
         }
+        self.depths.fill(f32::INFINITY);
+    }
+
+    pub fn from_screen(&self, pos: Pos2) -> Pos2 {
+        pos2(
+            pos.x - (self.width as f32) * 0.5,
+            (self.height as f32) * 0.5 - pos.y,
+        )
     }
 
     pub fn draw(&mut self, ctx: &Context, painter: &Painter) {

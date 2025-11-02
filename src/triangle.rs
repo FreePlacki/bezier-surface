@@ -1,36 +1,90 @@
-use eframe::egui::{Color32, Painter, Stroke};
+use eframe::egui::{Color32, Painter, Pos2, Stroke, pos2};
 
-use crate::{canvas::Canvas, point::Point3};
+use crate::{
+    canvas::{self, Canvas},
+    point::{Point3, Vector3},
+    scene::Light,
+};
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Vertex {
+    pos: Point3,
+    normal: Vector3,
+}
+
+impl Vertex {
+    pub fn new(pos: Point3, normal: Vector3) -> Self {
+        Self { pos, normal }
+    }
+
+    pub fn rotate_ox(&mut self, rot: f32) {
+        self.pos.rotate_ox(rot);
+        self.normal.rotate_ox(rot);
+    }
+
+    pub fn rotate_oz(&mut self, rot: f32) {
+        self.pos.rotate_oz(rot);
+        self.normal.rotate_oz(rot);
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Triangle {
-    pub p0: Point3,
-    pub p1: Point3,
-    pub p2: Point3,
+    pub p0: Vertex,
+    pub p1: Vertex,
+    pub p2: Vertex,
 }
 
 impl Triangle {
-    pub fn new(p0: Point3, p1: Point3, p2: Point3) -> Self {
+    pub fn new(p0: Vertex, p1: Vertex, p2: Vertex) -> Self {
         Self { p0, p1, p2 }
     }
 
     pub fn draw_outline(&self, canvas: &Canvas, painter: &Painter) {
         let stroke = Stroke::new(1.0, Color32::LIGHT_GREEN);
 
-        let p0 = self.p0.to_screen(canvas).projection();
-        let p1 = self.p1.to_screen(canvas).projection();
-        let p2 = self.p2.to_screen(canvas).projection();
+        let p0 = self.p0.pos.to_screen(canvas).projection();
+        let p1 = self.p1.pos.to_screen(canvas).projection();
+        let p2 = self.p2.pos.to_screen(canvas).projection();
         painter.line(vec![p0, p1], stroke);
         painter.line(vec![p1, p2], stroke);
         painter.line(vec![p2, p0], stroke);
     }
 
-    pub fn draw_filling(&self, canvas: &mut Canvas) {
-        let color = [200, 255, 200, 255];
+    fn determinant(&self) -> f32 {
+        let (x0, y0) = (self.p0.pos.x, self.p0.pos.y);
+        let (x1, y1) = (self.p1.pos.x, self.p1.pos.y);
+        let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
 
-        let v0 = self.p0.to_screen(canvas).projection();
-        let v1 = self.p1.to_screen(canvas).projection();
-        let v2 = self.p2.to_screen(canvas).projection();
+        (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+    }
+
+    fn sarea(&self) -> f32 {
+        let (x0, y0) = (self.p0.pos.x, self.p0.pos.y);
+        let (x1, y1) = (self.p1.pos.x, self.p1.pos.y);
+        let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
+
+        (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)
+    }
+
+    fn baryc(&self, x: f32, y: f32, det: f32) -> (f32, f32, f32) {
+        let (x0, y0) = (self.p0.pos.x, self.p0.pos.y);
+        let (x1, y1) = (self.p1.pos.x, self.p1.pos.y);
+        let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
+
+        let l0 = ((y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)) / det;
+        let l1 = ((y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)) / det;
+        let l2 = 1.0 - l0 - l1;
+
+        (l0, l1, l2)
+    }
+
+    pub fn draw_filling(&self, canvas: &mut Canvas, light: &Light) {
+        let base_color = (0.0, 1.0, 0.0);
+
+        let v0 = self.p0.pos.to_screen(canvas).projection();
+        let v1 = self.p1.pos.to_screen(canvas).projection();
+        let v2 = self.p2.pos.to_screen(canvas).projection();
 
         let verts = [v0, v1, v2];
 
@@ -128,7 +182,34 @@ impl Triangle {
                     let x1 = (canvas.width() as i32 - 1).min(x_end) as usize;
                     if x0 <= x1 {
                         for x in x0..=x1 {
-                            canvas.put_pixel(x, y, color);
+                            let xf = x as f32;
+                            let yf = scan_y as f32;
+                            let Pos2 { x: xf, y: yf } = canvas.from_screen(pos2(xf, yf));
+
+                            let (l0, l1, l2) = self.baryc(xf, yf, self.determinant());
+
+                            let n =
+                                (self.p0.normal * l0 + self.p1.normal * l1 + self.p2.normal * l2)
+                                    .normalized();
+                            let p = self.p0.pos * l0 + self.p1.pos * l1 + self.p2.pos * l2;
+
+                            let light_dir =
+                                (light.pos() - p).normalized() * self.determinant().signum();
+                            let intensity = n.dot(light_dir).max(0.0);
+                            let light_color = light.color();
+
+                            let color = [
+                                (light_color.0 * base_color.0 * intensity * 255.0).min(255.0) as u8,
+                                (light_color.1 * base_color.1 * intensity * 255.0).min(255.0) as u8,
+                                (light_color.2 * base_color.2 * intensity * 255.0).min(255.0) as u8,
+                                255,
+                            ];
+
+                            if self.sarea() < 0.0 {
+                                canvas.put_pixel(x, y, p.z, [0, 0, 0, 255]);
+                            } else {
+                                canvas.put_pixel(x, y, p.z, color);
+                            }
                         }
                     }
                 }

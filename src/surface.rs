@@ -1,8 +1,15 @@
 use std::str::FromStr;
 
-use eframe::egui::{Color32, Painter, Stroke, pos2};
+use eframe::{
+    egui::{Color32, Painter, Stroke, pos2},
+};
 
-use crate::{canvas::Canvas, mesh::Mesh, point::Point3, triangle::Triangle};
+use crate::{
+    canvas::Canvas,
+    mesh::Mesh,
+    point::{Point3, Vector3},
+    triangle::{Triangle, Vertex},
+};
 
 pub struct BezierSurface {
     points: [[Point3; 4]; 4],
@@ -12,16 +19,16 @@ impl BezierSurface {
     pub fn rotate_ox(&mut self, delta: f32) {
         self.points
             .iter_mut()
-            .for_each(|r| r.iter_mut().for_each(|p| *p = p.rotate_ox(delta)));
+            .for_each(|r| r.iter_mut().for_each(|p| p.rotate_ox(delta)));
     }
 
     pub fn rotate_oz(&mut self, delta: f32) {
         self.points
             .iter_mut()
-            .for_each(|r| r.iter_mut().for_each(|p| *p = p.rotate_oz(delta)));
+            .for_each(|r| r.iter_mut().for_each(|p| p.rotate_oz(delta)));
     }
 
-    pub fn evaluate(&self, u: f32, v: f32) -> Point3 {
+    pub fn evaluate(&self, u: f32, v: f32) -> Vertex {
         fn bernstein(i: usize, t: f32) -> f32 {
             match i {
                 0 => (1.0 - t).powi(3),
@@ -32,18 +39,40 @@ impl BezierSurface {
             }
         }
 
-        let mut p = Point3::origin();
-        for y in 0..4 {
-            let bv = bernstein(y, v);
-            for x in 0..4 {
-                let bu = bernstein(x, u);
-                let w = bu * bv;
-                p.x += self.points[y][x].x * w;
-                p.y += self.points[y][x].y * w;
-                p.z += self.points[y][x].z * w;
+        fn deriv(i: usize, t: f32) -> f32 {
+            match i {
+                0 => -3.0 * (1.0 - t).powi(2),
+                1 => 3.0 * (1.0 - t).powi(2) - 6.0 * t * (1.0 - t),
+                2 => 6.0 * t * (1.0 - t) - 3.0 * t.powi(2),
+                3 => 3.0 * t.powi(2),
+                _ => unreachable!(),
             }
         }
-        p
+
+        let mut p = Point3::origin();
+        let mut du = Vector3::zeros();
+        let mut dv = Vector3::zeros();
+        for j in 0..4 {
+            let bv = bernstein(j, v);
+            let dbv = deriv(j, v);
+            for i in 0..4 {
+                let bu = bernstein(i, u);
+                let dbu = deriv(i, u);
+                let pt = self.points[j][i];
+                let w = bu * bv;
+                p.x += pt.x * w;
+                p.y += pt.y * w;
+                p.z += pt.z * w;
+                du.x += pt.x * dbu * bv;
+                du.y += pt.y * dbu * bv;
+                du.z += pt.z * dbu * bv;
+                dv.x += pt.x * bu * dbv;
+                dv.y += pt.y * bu * dbv;
+                dv.z += pt.z * bu * dbv;
+            }
+        }
+        let n = du.cross(dv).normalized();
+        Vertex::new(p, n)
     }
 
     pub fn triangulate(&self, resolution: usize) -> Mesh {

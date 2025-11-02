@@ -1,6 +1,6 @@
 use eframe::egui::Painter;
 
-use crate::{canvas::Canvas, triangle::Triangle};
+use crate::{canvas::Canvas, scene::Light, triangle::Triangle};
 
 pub struct Mesh {
     triangles: Vec<Triangle>,
@@ -21,17 +21,17 @@ impl Mesh {
 
     pub fn rotate_ox(&mut self, delta: f32) {
         self.triangles.iter_mut().for_each(|t| {
-            t.p0 = t.p0.rotate_ox(delta);
-            t.p1 = t.p1.rotate_ox(delta);
-            t.p2 = t.p2.rotate_ox(delta);
+            t.p0.rotate_ox(delta);
+            t.p1.rotate_ox(delta);
+            t.p2.rotate_ox(delta);
         });
     }
 
     pub fn rotate_oz(&mut self, delta: f32) {
         self.triangles.iter_mut().for_each(|t| {
-            t.p0 = t.p0.rotate_oz(delta);
-            t.p1 = t.p1.rotate_oz(delta);
-            t.p2 = t.p2.rotate_oz(delta);
+            t.p0.rotate_oz(delta);
+            t.p1.rotate_oz(delta);
+            t.p2.rotate_oz(delta);
         });
     }
 
@@ -41,7 +41,7 @@ impl Mesh {
             .for_each(|t| t.draw_outline(canvas, painter));
     }
 
-    pub fn draw_fillings(&self, canvas: &mut Canvas) {
-        self.triangles.iter().for_each(|t| t.draw_filling(canvas));
+    pub fn draw_fillings(&self, canvas: &mut Canvas, light: &Light) {
+        self.triangles.iter().for_each(|t| t.draw_filling(canvas, light));
     }
 }

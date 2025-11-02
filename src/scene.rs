@@ -5,13 +5,36 @@ use std::{
     str::FromStr,
 };
 
-use eframe::egui::Painter;
+use eframe::egui::{Color32, Painter, Stroke, pos2};
 
-use crate::{canvas::Canvas, mesh::Mesh, surface::BezierSurface};
+use crate::{canvas::Canvas, mesh::Mesh, point::Point3, surface::BezierSurface};
+
+pub struct Light {
+    pos: Point3,
+    color: (f32, f32, f32),
+}
+
+impl Light {
+    pub fn new(pos: Point3, color: (f32, f32, f32)) -> Self {
+        debug_assert!(color.0 >= 0.0 && color.0 <= 1.0);
+        debug_assert!(color.1 >= 0.0 && color.1 <= 1.0);
+        debug_assert!(color.2 >= 0.0 && color.2 <= 1.0);
+        Self { pos, color }
+    }
+
+    pub fn pos(&self) -> Point3 {
+        self.pos
+    }
+
+    pub fn color(&self) -> (f32, f32, f32) {
+        self.color
+    }
+}
 
 pub struct Scene {
     surface: BezierSurface,
     mesh: Mesh,
+    light: Light,
     rot_ox: f32,
     rot_oz: f32,
 }
@@ -27,6 +50,7 @@ impl Scene {
         Ok(Self {
             surface,
             mesh,
+            light: Light::new(Point3::new(-600.0, 700.0, 0.0), (1.0, 1.0, 1.0)),
             rot_ox: 0.0,
             rot_oz: 0.0,
         })
@@ -75,7 +99,7 @@ impl Scene {
     }
 
     pub fn draw_fillings(&self, canvas: &mut Canvas) {
-        self.mesh.draw_fillings(canvas);
+        self.mesh.draw_fillings(canvas, &self.light);
     }
 
     pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
@@ -84,5 +108,12 @@ impl Scene {
 
     pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
         self.surface.draw_points(canvas, &painter);
+        painter.line(
+            vec![
+                self.light.pos().to_screen(canvas).projection(),
+                Point3::origin().to_screen(canvas).projection(),
+            ],
+            Stroke::new(3.0, Color32::YELLOW),
+        );
     }
 }
