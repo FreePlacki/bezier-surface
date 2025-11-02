@@ -4,10 +4,10 @@ use eframe::egui::{self, Slider};
 
 use crate::{canvas::Canvas, scene::Scene};
 
-pub struct Visible {
-    pub polygon: bool,
-    pub mesh: bool,
-    pub filling: bool,
+struct Visible {
+    polygon: bool,
+    mesh: bool,
+    filling: bool,
 }
 
 pub struct PolygonApp {
@@ -75,7 +75,7 @@ impl eframe::App for PolygonApp {
 
                 let mut n = self.scene.mesh_resolution();
                 ui.label("Dokładność");
-                ui.add(Slider::new(&mut n, 1..=50));
+                ui.add(Slider::new(&mut n, 2..=50));
                 self.scene.set_mesh_resolution(n);
 
                 ui.separator();
@@ -90,14 +90,26 @@ impl eframe::App for PolygonApp {
                 ui.allocate_painter(ui.available_size(), egui::Sense::click_and_drag());
 
             let delta = response.drag_delta();
+            let strength = 8e-3;
 
-            self.scene.rotate_ox(-delta.y * 8e-3);
-            self.scene.rotate_oz(delta.x * 8e-3);
+            if delta.y.abs() > 10.0 * strength {
+                self.scene.rotate_ox(delta.y * strength);
+            }
+            if delta.x.abs() > 10.0 * strength {
+                self.scene.rotate_oz(delta.x * strength);
+            }
 
             if self.visible.filling {
-                self.canvas.draw(ui);
+                self.scene.draw_fillings(&mut self.canvas);
+                self.canvas.draw(ctx, &painter);
             }
-            self.scene.draw(&mut self.canvas, &painter, &self.visible);
+            if self.visible.mesh {
+                self.scene.draw_outlines(&self.canvas, &painter);
+            }
+            if self.visible.polygon {
+                self.scene.draw_points(&self.canvas, &painter);
+            }
         });
+        ctx.request_repaint();
     }
 }

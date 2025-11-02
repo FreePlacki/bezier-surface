@@ -7,6 +7,7 @@ mod canvas;
 mod point;
 mod surface;
 mod mesh;
+mod triangle;
 mod scene;
 
 fn main() -> eframe::Result {

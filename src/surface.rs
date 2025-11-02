@@ -2,9 +2,7 @@ use std::str::FromStr;
 
 use eframe::egui::{Color32, Painter, Stroke, pos2};
 
-use crate::{
-    canvas::Canvas, mesh::Mesh, point::{Point3, Triangle}
-};
+use crate::{canvas::Canvas, mesh::Mesh, point::Point3, triangle::Triangle};
 
 pub struct BezierSurface {
     points: [[Point3; 4]; 4],

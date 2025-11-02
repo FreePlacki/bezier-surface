@@ -1,8 +1,13 @@
-use std::{f32::consts::FRAC_PI_2, fs::File, io::Read, str::FromStr};
+use std::{
+    f32::consts::{FRAC_PI_2, PI},
+    fs::File,
+    io::Read,
+    str::FromStr,
+};
 
 use eframe::egui::Painter;
 
-use crate::{app::Visible, canvas::Canvas, mesh::Mesh, surface::BezierSurface};
+use crate::{canvas::Canvas, mesh::Mesh, surface::BezierSurface};
 
 pub struct Scene {
     surface: BezierSurface,
@@ -36,20 +41,26 @@ impl Scene {
     }
 
     pub fn rotate_ox(&mut self, delta: f32) {
-        let new_rot = (self.rot_ox + delta).clamp(-FRAC_PI_2, FRAC_PI_2);
-        if (new_rot - self.rot_ox).abs() < 1e-3 {
-            return;
+        let mut new_rot = self.rot_ox + delta;
+        if new_rot < -FRAC_PI_2 {
+            new_rot += PI;
+        } else if new_rot > FRAC_PI_2 {
+            new_rot -= PI;
         }
+
         self.rot_ox = new_rot;
         self.surface.rotate_ox(delta);
         self.mesh.rotate_ox(delta);
     }
 
     pub fn rotate_oz(&mut self, delta: f32) {
-        let new_rot = (self.rot_oz + delta).clamp(-FRAC_PI_2, FRAC_PI_2);
-        if (new_rot - self.rot_oz).abs() < 1e-3 {
-            return;
+        let mut new_rot = self.rot_oz + delta;
+        if new_rot < -FRAC_PI_2 {
+            new_rot += PI;
+        } else if new_rot > FRAC_PI_2 {
+            new_rot -= PI;
         }
+
         self.rot_oz = new_rot;
         self.surface.rotate_oz(delta);
         self.mesh.rotate_oz(delta);
@@ -63,12 +74,15 @@ impl Scene {
         self.mesh = self.surface.triangulate(res);
     }
 
-    pub fn draw(&self, canvas: &mut Canvas, painter: &Painter, visible: &Visible) {
-        if visible.mesh {
-            self.mesh.draw(canvas, &painter);
-        }
-        if visible.polygon {
-            self.surface.draw_points(canvas, &painter);
-        }
+    pub fn draw_fillings(&self, canvas: &mut Canvas) {
+        self.mesh.draw_fillings(canvas);
+    }
+
+    pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
+        self.mesh.draw_outlines(canvas, &painter);
+    }
+
+    pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
+        self.surface.draw_points(canvas, &painter);
     }
 }

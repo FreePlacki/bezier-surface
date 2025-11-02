@@ -1,6 +1,6 @@
-use eframe::egui::{Color32, Painter, Stroke};
+use eframe::egui::Painter;
 
-use crate::{canvas::Canvas, point::Triangle};
+use crate::{canvas::Canvas, triangle::Triangle};
 
 pub struct Mesh {
     triangles: Vec<Triangle>,
@@ -9,7 +9,10 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn new(triangles: Vec<Triangle>, resolution: usize) -> Self {
-        Self { triangles, resolution }
+        Self {
+            triangles,
+            resolution,
+        }
     }
 
     pub fn resolution(&self) -> usize {
@@ -32,15 +35,13 @@ impl Mesh {
         });
     }
 
-    pub fn draw(&self, canvas: &Canvas, painter: &Painter) {
-        let stroke = Stroke::new(1.0, Color32::WHITE);
-        for t in &self.triangles {
-            let p0 = t.p0.to_screen(canvas).projection();
-            let p1 = t.p1.to_screen(canvas).projection();
-            let p2 = t.p2.to_screen(canvas).projection();
-            painter.line(vec![p0, p1], stroke);
-            painter.line(vec![p1, p2], stroke);
-            painter.line(vec![p2, p0], stroke);
-        }
+    pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
+        self.triangles
+            .iter()
+            .for_each(|t| t.draw_outline(canvas, painter));
+    }
+
+    pub fn draw_fillings(&self, canvas: &mut Canvas) {
+        self.triangles.iter().for_each(|t| t.draw_filling(canvas));
     }
 }

@@ -1,4 +1,4 @@
-use eframe::egui::{self, pos2, Rect, TextureOptions};
+use eframe::egui::{self, Context, Painter, Rect, TextureOptions, pos2, vec2};
 
 pub struct Canvas {
     width: usize,
@@ -22,7 +22,7 @@ impl Canvas {
     }
 
     pub fn height(&self) -> usize {
-        self.width
+        self.height
     }
 
     pub fn put_pixel(&mut self, x: usize, y: usize, rgba: [u8; 4]) {
@@ -43,26 +43,28 @@ impl Canvas {
         }
     }
 
-    pub fn draw(&mut self, ui: &mut egui::Ui) {
-        let img = egui::ColorImage::from_rgba_unmultiplied([self.width, self.height], &self.buffer);
+    pub fn draw(&mut self, ctx: &Context, painter: &Painter) {
+        let img = eframe::egui::ColorImage::from_rgba_unmultiplied(
+            [self.width, self.height],
+            &self.buffer,
+        );
+
         match &mut self.texture {
             Some(tex) => tex.set(img, TextureOptions::default()),
             None => {
-                self.texture = Some(ui.ctx().load_texture("surface", img, Default::default()));
+                self.texture = Some(ctx.load_texture("surface", img, Default::default()));
             }
         }
+
         let tex = self.texture.as_ref().unwrap();
 
-        let painter = ui.painter();
-        let rect = Rect::from_min_max(pos2(0.0, 0.0), pos2(self.width as f32, self.height as f32));
+        let size = vec2(self.width as f32, self.height as f32);
+
         painter.image(
             tex.id(),
-            rect,
-            egui::Rect::from_min_max(
-                egui::pos2(0.0, 0.0),
-                egui::pos2(self.width as f32, self.height as f32),
-            ),
-            egui::Color32::WHITE,
+            Rect::from_min_size(pos2(0.0, 0.0), size),
+            Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+            eframe::egui::Color32::WHITE,
         );
     }
 }

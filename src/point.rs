@@ -50,7 +50,7 @@ impl Point3 {
         Self {
             x: self.x * c - self.y * s,
             y: self.x * s + self.y * c,
-            z: self.z
+            z: self.z,
         }
     }
 }
@@ -81,18 +81,5 @@ impl FromStr for Point3 {
         }
 
         Ok(Self { x, y, z })
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Triangle {
-    pub p0: Point3,
-    pub p1: Point3,
-    pub p2: Point3,
-}
-
-impl Triangle {
-    pub fn new(p0: Point3, p1: Point3, p2: Point3) -> Self {
-        Self { p0, p1, p2 }
     }
 }
