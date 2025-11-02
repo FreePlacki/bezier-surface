@@ -6,6 +6,7 @@ mod app;
 mod canvas;
 mod point;
 mod surface;
+mod mesh;
 mod scene;
 
 fn main() -> eframe::Result {

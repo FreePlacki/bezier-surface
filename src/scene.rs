@@ -1,11 +1,8 @@
 use std::{f32::consts::FRAC_PI_2, fs::File, io::Read, str::FromStr};
 
-use eframe::egui::{self, Painter, Response};
+use eframe::egui::Painter;
 
-use crate::{
-    canvas::Canvas,
-    surface::{BezierSurface, Mesh},
-};
+use crate::{app::Visible, canvas::Canvas, mesh::Mesh, surface::BezierSurface};
 
 pub struct Scene {
     surface: BezierSurface,
@@ -66,8 +63,12 @@ impl Scene {
         self.mesh = self.surface.triangulate(res);
     }
 
-    pub fn draw(&self, canvas: &mut Canvas, painter: &Painter) {
-        self.mesh.draw(canvas, &painter);
-        self.surface.draw_points(canvas, &painter);
+    pub fn draw(&self, canvas: &mut Canvas, painter: &Painter, visible: &Visible) {
+        if visible.mesh {
+            self.mesh.draw(canvas, &painter);
+        }
+        if visible.polygon {
+            self.surface.draw_points(canvas, &painter);
+        }
     }
 }
