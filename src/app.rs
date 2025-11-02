@@ -45,13 +45,18 @@ impl eframe::App for PolygonApp {
             .show(ctx, |ui| {
                 let mut ox = self.scene.rot_ox().to_degrees();
                 ui.label("OX");
-                ui.add(Slider::new(&mut ox, -90.0..=90.0).suffix("°"));
+                ui.add(Slider::new(&mut ox, -90.0..=90.0).suffix("°").max_decimals(0));
                 self.scene.rotate_ox(ox.to_radians() - self.scene.rot_ox());
 
                 let mut oz = self.scene.rot_oz().to_degrees();
                 ui.label("OZ");
-                ui.add(Slider::new(&mut oz, -90.0..=90.0).suffix("°"));
+                ui.add(Slider::new(&mut oz, -90.0..=90.0).suffix("°").max_decimals(0));
                 self.scene.rotate_oz(oz.to_radians() - self.scene.rot_oz());
+
+                let mut n = self.scene.mesh_resolution();
+                ui.label("Dokładność");
+                ui.add(Slider::new(&mut n, 1..=50));
+                self.scene.set_mesh_resolution(n);
             });
 
         self.canvas.clear(None);
@@ -66,7 +71,7 @@ impl eframe::App for PolygonApp {
             self.scene.rotate_oz(delta.x * 8e-3);
 
             self.canvas.draw(ui);
-            self.scene.draw(&mut self.canvas, &response, &painter);
+            self.scene.draw(&mut self.canvas, &painter);
         });
     }
 }

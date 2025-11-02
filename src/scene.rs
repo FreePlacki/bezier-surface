@@ -20,7 +20,7 @@ impl Scene {
         let mut buf = String::new();
         f.read_to_string(&mut buf).map_err(|e| e.to_string())?;
         let surface = BezierSurface::from_str(&buf)?;
-        let mesh = surface.triangulate();
+        let mesh = surface.triangulate(20);
 
         Ok(Self {
             surface,
@@ -58,7 +58,15 @@ impl Scene {
         self.mesh.rotate_oz(delta);
     }
 
-    pub fn draw(&self, canvas: &mut Canvas, response: &Response, painter: &Painter) {
+    pub fn mesh_resolution(&self) -> usize {
+        self.mesh.resolution()
+    }
+
+    pub fn set_mesh_resolution(&mut self, res: usize) {
+        self.mesh = self.surface.triangulate(res);
+    }
+
+    pub fn draw(&self, canvas: &mut Canvas, painter: &Painter) {
         self.mesh.draw(canvas, &painter);
         self.surface.draw_points(canvas, &painter);
     }

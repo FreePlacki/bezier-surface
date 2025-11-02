@@ -49,10 +49,10 @@ impl BezierSurface {
         p
     }
 
-    pub fn triangulate(&self) -> Mesh {
+    pub fn triangulate(&self, resolution: usize) -> Mesh {
         let mut triangles = Vec::new();
 
-        let n = 20 - 1;
+        let n = resolution - 1;
 
         let u = |x| x as f32 / n as f32;
         let v = |y| y as f32 / n as f32;
@@ -68,7 +68,7 @@ impl BezierSurface {
                 triangles.push(Triangle::new(p00, p11, p01));
             }
         }
-        Mesh::new(triangles)
+        Mesh::new(triangles, resolution)
     }
 
     pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
@@ -117,11 +117,16 @@ impl FromStr for BezierSurface {
 
 pub struct Mesh {
     triangles: Vec<Triangle>,
+    resolution: usize,
 }
 
 impl Mesh {
-    pub fn new(triangles: Vec<Triangle>) -> Self {
-        Self { triangles }
+    pub fn new(triangles: Vec<Triangle>, resolution: usize) -> Self {
+        Self { triangles, resolution }
+    }
+
+    pub fn resolution(&self) -> usize {
+        self.resolution
     }
 
     pub fn rotate_ox(&mut self, delta: f32) {
