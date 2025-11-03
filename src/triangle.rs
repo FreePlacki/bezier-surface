@@ -11,13 +11,22 @@ use crate::{
 pub struct Vertex {
     pos: Point3,
     normal: Vector3,
+    pu: Vector3,
+    pv: Vector3,
     u: f32,
     v: f32,
 }
 
 impl Vertex {
-    pub fn new(pos: Point3, normal: Vector3, u: f32, v: f32) -> Self {
-        Self { pos, normal, u, v }
+    pub fn new(pos: Point3, normal: Vector3, pu: Vector3, pv: Vector3, u: f32, v: f32) -> Self {
+        Self {
+            pos,
+            normal,
+            pu,
+            pv,
+            u,
+            v,
+        }
     }
 
     pub fn rotate_ox(&mut self, rot: f32) {
@@ -28,6 +37,29 @@ impl Vertex {
     pub fn rotate_oz(&mut self, rot: f32) {
         self.pos.rotate_oz(rot);
         self.normal.rotate_oz(rot);
+    }
+}
+
+struct Baryc((f32, f32, f32));
+
+impl Baryc {
+    pub fn new(tri: &Triangle, x: f32, y: f32, det: f32) -> Self {
+        let (x0, y0) = (tri.p0.pos.x, tri.p0.pos.y);
+        let (x1, y1) = (tri.p1.pos.x, tri.p1.pos.y);
+        let (x2, y2) = (tri.p2.pos.x, tri.p2.pos.y);
+
+        let l0 = ((y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)) / det;
+        let l1 = ((y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)) / det;
+        let l2 = 1.0 - l0 - l1;
+
+        Self((l0, l1, l2))
+    }
+
+    pub fn interp<T>(&self, p0: T, p1: T, p2: T) -> T
+    where
+        T: std::ops::Mul<f32, Output = T> + std::ops::Add<T, Output = T>,
+    {
+        p0 * self.0.0 + p1 * self.0.1 + p2 * self.0.2
     }
 }
 
@@ -60,18 +92,6 @@ impl Triangle {
         let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
 
         (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
-    }
-
-    fn baryc(&self, x: f32, y: f32, det: f32) -> (f32, f32, f32) {
-        let (x0, y0) = (self.p0.pos.x, self.p0.pos.y);
-        let (x1, y1) = (self.p1.pos.x, self.p1.pos.y);
-        let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
-
-        let l0 = ((y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)) / det;
-        let l1 = ((y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)) / det;
-        let l2 = 1.0 - l0 - l1;
-
-        (l0, l1, l2)
     }
 
     pub fn draw_filling(&self, canvas: &mut Canvas, light: &Light, material: &Material) {
@@ -115,7 +135,7 @@ impl Triangle {
             let mut p0 = verts[i];
             let mut p1 = verts[(i + 1) % 3];
 
-            if (p1.y - p0.y).abs() < 1e-2 {
+            if (p1.y - p0.y).abs() < 1e-4 {
                 continue;
             }
 
@@ -179,14 +199,17 @@ impl Triangle {
                             let yf = scan_y as f32;
                             let Pos2 { x: xf, y: yf } = canvas.from_screen(pos2(xf, yf));
 
-                            let (l0, l1, l2) = self.baryc(xf, yf, self.determinant());
+                            let baryc = Baryc::new(self, xf, yf, self.determinant());
 
-                            let n =
-                                (self.p0.normal * l0 + self.p1.normal * l1 + self.p2.normal * l2)
-                                    .normalized();
-                            let p = self.p0.pos * l0 + self.p1.pos * l1 + self.p2.pos * l2;
-                            let u = self.p0.u * l0 + self.p1.u * l1 + self.p2.u * l2;
-                            let v = self.p0.v * l0 + self.p1.v * l1 + self.p2.v * l2;
+                            let p = baryc.interp(self.p0.pos, self.p1.pos, self.p2.pos);
+                            let u = baryc.interp(self.p0.u, self.p1.u, self.p2.u);
+                            let v = baryc.interp(self.p0.v, self.p1.v, self.p2.v);
+
+                            let n = baryc
+                                .interp(self.p0.normal, self.p1.normal, self.p2.normal);
+                            let pu = baryc.interp(self.p0.pu, self.p1.pu, self.p2.pu);
+                            let pv = baryc.interp(self.p0.pv, self.p1.pv, self.p2.pv);
+                            let n = material.normal_at(u, v, pu, pv, n).normalized();
 
                             let color = self.color_for(u, v, n, p, light, material);
                             canvas.put_pixel(x, y, p.z, color);
@@ -203,7 +226,15 @@ impl Triangle {
         }
     }
 
-    fn color_for(&self, u: f32, v: f32, n: Vector3, p: Point3, light: &Light, material: &Material) -> [u8; 4] {
+    fn color_for(
+        &self,
+        u: f32,
+        v: f32,
+        n: Vector3,
+        p: Point3,
+        light: &Light,
+        material: &Material,
+    ) -> [u8; 4] {
         let light_dir = (light.pos - p).normalized();
         let il = n.dot(light_dir).max(0.0);
 

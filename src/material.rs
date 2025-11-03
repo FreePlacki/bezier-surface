@@ -1,4 +1,4 @@
-use crate::{color::Color, texture::Texture};
+use crate::{color::Color, point::Vector3, texture::Texture};
 
 #[derive(Debug)]
 pub enum Coloring {
@@ -9,6 +9,8 @@ pub enum Coloring {
 pub struct Material {
     /// base surface color
     pub coloring: Coloring,
+    /// map altering normal vectors (if `None` the normals remain unchanged)
+    pub normal_map: Option<Texture>,
     /// diffuse fraction
     pub kd: f32,
     /// specular fraction
@@ -18,18 +20,6 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn new(coloring: Coloring, kd: f32, ks: f32, m: i32) -> Self {
-        debug_assert!(kd >= 0.0 && kd <= 1.0);
-        debug_assert!(ks >= 0.0 && ks <= 1.0);
-
-        Self {
-            coloring,
-            kd,
-            ks,
-            m,
-        }
-    }
-
     pub fn color_at(&self, u: f32, v: f32) -> Color {
         match &self.coloring {
             Coloring::Solid(c) => *c,
@@ -43,6 +33,20 @@ impl Material {
             }
         }
     }
+
+    pub fn normal_at(&self, u: f32, v: f32, pu: Vector3, pv: Vector3, n: Vector3) -> Vector3 {
+        match &self.normal_map {
+            None => n,
+            Some(t) => {
+                let m = t.sample_normal(u, v);
+                Vector3 {
+                    x: m.x * pu.x + m.y * pv.x + m.z * n.x,
+                    y: m.x * pu.y + m.y * pv.y + m.z * n.y,
+                    z: m.x * pu.z + m.y * pv.z + m.z * n.z,
+                }
+            }
+        }
+    }
 }
 
 impl Default for Material {
@@ -50,6 +54,7 @@ impl Default for Material {
         let solid = Coloring::Solid(Color::new(0.0, 1.0, 0.0));
         Self {
             coloring: solid,
+            normal_map: None,
             kd: 0.5,
             ks: 0.5,
             m: 4,

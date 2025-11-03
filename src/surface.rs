@@ -1,8 +1,6 @@
 use std::str::FromStr;
 
-use eframe::{
-    egui::{Color32, Painter, Stroke, pos2},
-};
+use eframe::egui::{Color32, Painter, Stroke, pos2};
 
 use crate::{
     canvas::Canvas,
@@ -50,8 +48,8 @@ impl BezierSurface {
         }
 
         let mut p = Point3::origin();
-        let mut du = Vector3::zeros();
-        let mut dv = Vector3::zeros();
+        let mut pu = Vector3::zeros();
+        let mut pv = Vector3::zeros();
         for j in 0..4 {
             let bv = bernstein(j, v);
             let dbv = deriv(j, v);
@@ -63,16 +61,16 @@ impl BezierSurface {
                 p.x += pt.x * w;
                 p.y += pt.y * w;
                 p.z += pt.z * w;
-                du.x += pt.x * dbu * bv;
-                du.y += pt.y * dbu * bv;
-                du.z += pt.z * dbu * bv;
-                dv.x += pt.x * bu * dbv;
-                dv.y += pt.y * bu * dbv;
-                dv.z += pt.z * bu * dbv;
+                pu.x += pt.x * dbu * bv;
+                pu.y += pt.y * dbu * bv;
+                pu.z += pt.z * dbu * bv;
+                pv.x += pt.x * bu * dbv;
+                pv.y += pt.y * bu * dbv;
+                pv.z += pt.z * bu * dbv;
             }
         }
-        let n = du.cross(dv).normalized();
-        Vertex::new(p, n, u, v)
+        let n = pu.cross(pv).normalized();
+        Vertex::new(p, n, pu, pv, u, v)
     }
 
     pub fn triangulate(&self, resolution: usize) -> Mesh {

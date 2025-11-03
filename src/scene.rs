@@ -118,6 +118,14 @@ impl Scene {
         }
     }
 
+    pub fn set_normal_map(&mut self, path: PathBuf) {
+        if let Ok(img) = image::open(path) {
+            let img = img.to_rgba8();
+            let texture = Texture::from_img(img);
+            self.material.normal_map = Some(texture);
+        }
+    }
+
     pub fn set_mesh_resolution(&mut self, res: usize) {
         self.mesh = self.surface.triangulate(res);
     }

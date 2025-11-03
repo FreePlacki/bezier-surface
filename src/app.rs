@@ -1,4 +1,7 @@
-use std::{process::exit, sync::mpsc};
+use std::{
+    process::exit,
+    sync::mpsc::{self, Sender},
+};
 
 use eframe::egui::{self, Context, Slider, Ui};
 
@@ -26,7 +29,8 @@ pub struct PolygonApp {
     canvas: Canvas,
     scene: Scene,
     visible: Visible,
-    rx: Option<mpsc::Receiver<String>>,
+    rx_tex: Option<mpsc::Receiver<String>>,
+    rx_nor: Option<mpsc::Receiver<String>>,
 }
 
 impl PolygonApp {
@@ -42,7 +46,8 @@ impl PolygonApp {
                 canvas: Canvas::new(600, 600),
                 scene,
                 visible: Visible::default(),
-                rx: None,
+                rx_tex: None,
+                rx_nor: None,
             },
         }
     }
@@ -92,6 +97,24 @@ impl PolygonApp {
         ui.add(Slider::new(&mut self.scene.material.m, 1..=100));
     }
 
+    fn pick_image(&mut self, tx: Sender<String>) {
+        std::thread::spawn(move || {
+            // https://docs.rs/image/latest/image/codecs/index.html#supported-formats
+            if let Some(path) = rfd::FileDialog::new()
+                .add_filter(
+                    "image",
+                    &[
+                        "png", "jpg", "gif", "bmp", "hdr", "ico", "jpeg", "pnm", "tiff", "webp",
+                    ],
+                )
+                .pick_file()
+            {
+                let s = path.display().to_string();
+                let _ = tx.send(s);
+            }
+        });
+    }
+
     fn pick_surface(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             let mut col = self.scene.material_color();
@@ -102,30 +125,15 @@ impl PolygonApp {
 
             if ui.button("Tekstura z pliku...").clicked() {
                 let (tx, rx) = mpsc::channel();
-                self.rx = Some(rx);
-                std::thread::spawn(move || {
-                    // https://docs.rs/image/latest/image/codecs/index.html#supported-formats
-                    if let Some(path) = rfd::FileDialog::new()
-                        .add_filter(
-                            "image",
-                            &[
-                                "png", "jpg", "gif", "bmp", "hdr", "ico", "jpeg", "pnm", "tiff",
-                                "webp",
-                            ],
-                        )
-                        .pick_file()
-                    {
-                        let s = path.display().to_string();
-                        let _ = tx.send(s);
-                    }
-                });
+                self.rx_tex = Some(rx);
+                self.pick_image(tx);
             }
         });
 
-        if let Some(rx) = &self.rx {
+        if let Some(rx) = &self.rx_tex {
             if let Ok(path) = rx.try_recv() {
                 self.scene.set_texture(path.into());
-                self.rx = None;
+                self.rx_tex = None;
             }
         }
     }
@@ -161,6 +169,29 @@ impl PolygonApp {
             }
         });
     }
+
+    fn normal_map(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            if ui.button("Mapa wekt. normalnych...").clicked() {
+                let (tx, rx) = mpsc::channel();
+                self.rx_nor = Some(rx);
+                self.pick_image(tx);
+            }
+
+            if self.scene.material.normal_map.is_some() {
+                if ui.button("🗑").clicked() {
+                    self.scene.material.normal_map = None;
+                }
+            }
+        });
+
+        if let Some(rx) = &self.rx_nor {
+            if let Ok(path) = rx.try_recv() {
+                self.scene.set_normal_map(path.into());
+                self.rx_nor = None;
+            }
+        }
+    }
 }
 
 impl eframe::App for PolygonApp {
@@ -191,6 +222,7 @@ impl eframe::App for PolygonApp {
 
                 ui.label("Kolor powierzchni");
                 self.pick_surface(ui);
+                self.normal_map(ui);
 
                 ui.separator();
                 self.light_props(ui);
