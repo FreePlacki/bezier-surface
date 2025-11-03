@@ -47,13 +47,20 @@ impl Scene {
         let surface = BezierSurface::from_str(&buf)?;
         let mesh = surface.triangulate(20);
 
-        Ok(Self {
+        let mut s = Self {
             surface,
             mesh,
             light: Light::new(Point3::new(-600.0, 700.0, 0.0), (1.0, 1.0, 1.0)),
-            rot_ox: -64.0f32.to_radians(),
-            rot_oz: -17.0f32.to_radians(),
-        })
+            rot_ox: 0.0,
+            rot_oz: 0.0,
+        };
+
+        let rot_ox = 104.0f32.to_radians();
+        let rot_oz = 10.0f32.to_radians();
+
+        s.rotate_ox(rot_ox);
+        s.rotate_oz(rot_oz);
+        Ok(s)
     }
 
     pub fn rot_ox(&self) -> f32 {
