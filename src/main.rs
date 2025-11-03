@@ -4,11 +4,14 @@ use crate::app::PolygonApp;
 
 mod app;
 mod canvas;
-mod point;
-mod surface;
+mod light;
+mod material;
 mod mesh;
-mod triangle;
+mod point;
 mod scene;
+mod color;
+mod surface;
+mod triangle;
 
 fn main() -> eframe::Result {
     let app = PolygonApp::new();

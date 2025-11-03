@@ -7,99 +7,14 @@ use std::{
 
 use eframe::egui::{Color32, Painter, Stroke};
 
-use crate::{canvas::Canvas, mesh::Mesh, point::Point3, surface::BezierSurface};
+use crate::{canvas::Canvas, color::Color, light::Light, material::Material, mesh::Mesh, point::Point3, surface::BezierSurface};
 
-#[derive(Debug, Clone, Copy)]
-pub struct Color {
-    r: f32,
-    g: f32,
-    b: f32,
-}
-
-impl Color {
-    pub fn new(r: f32, g: f32, b: f32) -> Self {
-        debug_assert!(r >= 0.0 && r <= 1.0);
-        debug_assert!(g >= 0.0 && g <= 1.0);
-        debug_assert!(b >= 0.0 && b <= 1.0);
-
-        Self { r, g, b }
-    }
-
-    pub fn r(&self) -> f32 {
-        self.r
-    }
-    pub fn g(&self) -> f32 {
-        self.g
-    }
-    pub fn b(&self) -> f32 {
-        self.b
-    }
-
-    pub fn as_slice(&self) -> [f32; 3] {
-        [self.r, self.g, self.b]
-    }
-
-    pub fn from_slice(color: [f32; 3]) -> Self {
-        Self::new(color[0], color[1], color[2])
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Light {
-    pos: Point3,
-    color: Color,
-}
-
-impl Light {
-    pub fn new(pos: Point3, color: Color) -> Self {
-        Self { pos, color }
-    }
-
-    pub fn pos(&self) -> Point3 {
-        self.pos
-    }
-
-    pub fn color(&self) -> Color {
-        self.color
-    }
-}
-
-pub struct Material {
-    /// base surface color
-    pub color: Color,
-    /// diffuse fraction
-    pub kd: f32,
-    /// specular fraction
-    pub ks: f32,
-    /// specular exponent
-    pub m: i32,
-}
-
-impl Material {
-    pub fn new(color: Color, kd: f32, ks: f32, m: i32) -> Self {
-        debug_assert!(kd >= 0.0 && kd <= 1.0);
-        debug_assert!(ks >= 0.0 && ks <= 1.0);
-
-        Self { color, kd, ks, m }
-    }
-}
-
-impl Default for Material {
-    fn default() -> Self {
-        Self {
-            color: Color::new(0.0, 1.0, 0.0),
-            kd: 0.5,
-            ks: 0.5,
-            m: 4,
-        }
-    }
-}
 
 pub struct Scene {
     pub material: Material,
+    pub light: Light,
     surface: BezierSurface,
     mesh: Mesh,
-    light: Light,
     rot_ox: f32,
     rot_oz: f32,
 }
@@ -110,7 +25,7 @@ impl Scene {
         let mut buf = String::new();
         f.read_to_string(&mut buf).map_err(|e| e.to_string())?;
         let surface = BezierSurface::from_str(&buf)?;
-        let mesh = surface.triangulate(20);
+        let mesh = surface.triangulate(30);
 
         let mut s = Self {
             surface,
@@ -195,14 +110,17 @@ impl Scene {
         self.mesh.draw_outlines(canvas, &painter);
     }
 
-    pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
-        self.surface.draw_points(canvas, &painter);
+    pub fn draw_light_pos(&self, canvas: &Canvas, painter: &Painter) {
         painter.line(
             vec![
-                self.light.pos().to_screen(canvas).projection(),
+                self.light.pos.to_screen(canvas).projection(),
                 Point3::origin().to_screen(canvas).projection(),
             ],
             Stroke::new(3.0, Color32::YELLOW),
         );
+    }
+
+    pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
+        self.surface.draw_points(canvas, &painter);
     }
 }

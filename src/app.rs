@@ -8,6 +8,18 @@ struct Visible {
     polygon: bool,
     mesh: bool,
     filling: bool,
+    light_pos: bool,
+}
+
+impl Default for Visible {
+    fn default() -> Self {
+        Self {
+            polygon: false,
+            mesh: false,
+            filling: true,
+            light_pos: true,
+        }
+    }
 }
 
 pub struct PolygonApp {
@@ -28,11 +40,7 @@ impl PolygonApp {
             Ok(scene) => Self {
                 canvas: Canvas::new(600, 600),
                 scene,
-                visible: Visible {
-                    polygon: true,
-                    mesh: true,
-                    filling: true,
-                },
+                visible: Visible::default(),
             },
         }
     }
@@ -82,6 +90,7 @@ impl eframe::App for PolygonApp {
                 ui.checkbox(&mut self.visible.polygon, "wielobok");
                 ui.checkbox(&mut self.visible.mesh, "siatka");
                 ui.checkbox(&mut self.visible.filling, "wypełnienie");
+                ui.checkbox(&mut self.visible.light_pos, "pozycja światła");
 
                 ui.separator();
                 ui.label("Matowość (kd)");
@@ -96,10 +105,34 @@ impl eframe::App for PolygonApp {
                 ui.color_edit_button_rgb(&mut col);
                 self.scene.set_material_color(col);
 
+                ui.separator();
+                ui.label("Pozycja światła (z)");
+                ui.add(Slider::new(&mut self.scene.light.pos.z, -600.0..=600.0).fixed_decimals(0));
                 ui.label("Kolor światła");
                 let mut col = self.scene.light_color();
                 ui.color_edit_button_rgb(&mut col);
                 self.scene.set_light_color(col);
+
+                let dt = ctx.input(|i| i.stable_dt);
+                self.scene.light.advance_animation(dt);
+                ui.label("Animacja światła");
+                ui.horizontal(|ui| {
+                    if self.scene.light.is_animating {
+                        if ui.small_button("⏸").clicked() {
+                            self.scene.light.is_animating = false;
+                        }
+                    } else {
+                        if ui.small_button("▶").clicked() {
+                            self.scene.light.is_animating = true;
+                        }
+                    }
+                    let mut new_t = self.scene.light.t;
+                    ui.add(Slider::new(&mut new_t, 0.0..=1.0).fixed_decimals(2));
+                    if !self.scene.light.is_animating {
+                        self.scene.light.t = new_t;
+                        self.scene.light.advance_animation(dt);
+                    }
+                });
             });
 
         self.canvas.clear(None);
@@ -126,6 +159,9 @@ impl eframe::App for PolygonApp {
             }
             if self.visible.polygon {
                 self.scene.draw_points(&self.canvas, &painter);
+            }
+            if self.visible.light_pos {
+                self.scene.draw_light_pos(&self.canvas, &painter);
             }
         });
         ctx.request_repaint();

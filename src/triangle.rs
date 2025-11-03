@@ -1,9 +1,7 @@
 use eframe::egui::{Color32, Painter, Pos2, Stroke, pos2};
 
 use crate::{
-    canvas::Canvas,
-    point::{Point3, Vector3},
-    scene::{Light, Material},
+    canvas::Canvas, light::Light, material::Material, point::{Point3, Vector3}
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -199,7 +197,7 @@ impl Triangle {
     }
 
     fn color_for(&self, n: Vector3, p: Point3, light: &Light, material: &Material) -> [u8; 4] {
-        let light_dir = (light.pos() - p).normalized();
+        let light_dir = (light.pos - p).normalized();
         let il = n.dot(light_dir).max(0.0);
 
         let v = Vector3::new(0.0, 0.0, 1.0);
@@ -209,11 +207,10 @@ impl Triangle {
 
         let intensity = (material.kd * il + material.ks * iz) * 255.0;
 
-        let light_color = light.color();
         [
-            (light_color.r() * material.color.r() * intensity) as u8,
-            (light_color.g() * material.color.g() * intensity) as u8,
-            (light_color.b() * material.color.b() * intensity) as u8,
+            (light.color.r() * material.color.r() * intensity).min(255.0) as u8,
+            (light.color.g() * material.color.g() * intensity).min(255.0) as u8,
+            (light.color.b() * material.color.b() * intensity).min(255.0) as u8,
             255,
         ]
     }
