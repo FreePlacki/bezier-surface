@@ -16,7 +16,7 @@ impl Canvas {
             width,
             height,
             buffer: vec![0; width * height * 4],
-            depths: vec![f32::INFINITY; width * height],
+            depths: vec![f32::NEG_INFINITY; width * height],
             texture: None,
         }
     }
@@ -33,7 +33,7 @@ impl Canvas {
         debug_assert!(x < self.width && y < self.height);
 
         let idx = y * self.width + x;
-        if z < self.depths[idx] {
+        if z > self.depths[idx] {
             self.depths[idx] = z;
             let bidx = idx * 4;
             self.buffer[bidx..bidx + 4].copy_from_slice(&rgba);
@@ -49,7 +49,7 @@ impl Canvas {
             }
             None => self.buffer.fill(0),
         }
-        self.depths.fill(f32::INFINITY);
+        self.depths.fill(f32::NEG_INFINITY);
     }
 
     pub fn from_screen(&self, pos: Pos2) -> Pos2 {

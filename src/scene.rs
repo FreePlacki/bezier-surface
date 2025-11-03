@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
 };
 
-use eframe::egui::{Color32, Painter, Stroke, pos2};
+use eframe::egui::{Color32, Painter, Stroke};
 
 use crate::{canvas::Canvas, mesh::Mesh, point::Point3, surface::BezierSurface};
 
@@ -51,8 +51,8 @@ impl Scene {
             surface,
             mesh,
             light: Light::new(Point3::new(-600.0, 700.0, 0.0), (1.0, 1.0, 1.0)),
-            rot_ox: 0.0,
-            rot_oz: 0.0,
+            rot_ox: -64.0f32.to_radians(),
+            rot_oz: -17.0f32.to_radians(),
         })
     }
 

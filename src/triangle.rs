@@ -1,7 +1,7 @@
 use eframe::egui::{Color32, Painter, Pos2, Stroke, pos2};
 
 use crate::{
-    canvas::{self, Canvas},
+    canvas::Canvas,
     point::{Point3, Vector3},
     scene::Light,
 };
@@ -57,14 +57,6 @@ impl Triangle {
         let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
 
         (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
-    }
-
-    fn sarea(&self) -> f32 {
-        let (x0, y0) = (self.p0.pos.x, self.p0.pos.y);
-        let (x1, y1) = (self.p1.pos.x, self.p1.pos.y);
-        let (x2, y2) = (self.p2.pos.x, self.p2.pos.y);
-
-        (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)
     }
 
     fn baryc(&self, x: f32, y: f32, det: f32) -> (f32, f32, f32) {
@@ -193,23 +185,18 @@ impl Triangle {
                                     .normalized();
                             let p = self.p0.pos * l0 + self.p1.pos * l1 + self.p2.pos * l2;
 
-                            let light_dir =
-                                (light.pos() - p).normalized() * self.determinant().signum();
+                            let light_dir = (light.pos() - p).normalized();
                             let intensity = n.dot(light_dir).max(0.0);
                             let light_color = light.color();
 
                             let color = [
-                                (light_color.0 * base_color.0 * intensity * 255.0).min(255.0) as u8,
-                                (light_color.1 * base_color.1 * intensity * 255.0).min(255.0) as u8,
-                                (light_color.2 * base_color.2 * intensity * 255.0).min(255.0) as u8,
+                                (light_color.0 * base_color.0 * intensity * 255.0) as u8,
+                                (light_color.1 * base_color.1 * intensity * 255.0) as u8,
+                                (light_color.2 * base_color.2 * intensity * 255.0) as u8,
                                 255,
                             ];
 
-                            if self.sarea() < 0.0 {
-                                canvas.put_pixel(x, y, p.z, [0, 0, 0, 255]);
-                            } else {
-                                canvas.put_pixel(x, y, p.z, color);
-                            }
+                            canvas.put_pixel(x, y, p.z, color);
                         }
                     }
                 }
