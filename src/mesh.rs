@@ -1,6 +1,6 @@
 use eframe::egui::Painter;
 
-use crate::{canvas::Canvas, scene::Light, triangle::Triangle};
+use crate::{canvas::Canvas, scene::{Light, Material}, triangle::Triangle};
 
 pub struct Mesh {
     triangles: Vec<Triangle>,
@@ -41,7 +41,7 @@ impl Mesh {
             .for_each(|t| t.draw_outline(canvas, painter));
     }
 
-    pub fn draw_fillings(&self, canvas: &mut Canvas, light: &Light) {
-        self.triangles.iter().for_each(|t| t.draw_filling(canvas, light));
+    pub fn draw_fillings(&self, canvas: &mut Canvas, light: &Light, material: &Material) {
+        self.triangles.iter().for_each(|t| t.draw_filling(canvas, light, material));
     }
 }

@@ -3,7 +3,7 @@ use eframe::egui::{Color32, Painter, Pos2, Stroke, pos2};
 use crate::{
     canvas::Canvas,
     point::{Point3, Vector3},
-    scene::Light,
+    scene::{Light, Material},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -71,9 +71,7 @@ impl Triangle {
         (l0, l1, l2)
     }
 
-    pub fn draw_filling(&self, canvas: &mut Canvas, light: &Light) {
-        let base_color = (0.0, 1.0, 0.0);
-
+    pub fn draw_filling(&self, canvas: &mut Canvas, light: &Light, material: &Material) {
         let v0 = self.p0.pos.to_screen(canvas).projection();
         let v1 = self.p1.pos.to_screen(canvas).projection();
         let v2 = self.p2.pos.to_screen(canvas).projection();
@@ -185,17 +183,7 @@ impl Triangle {
                                     .normalized();
                             let p = self.p0.pos * l0 + self.p1.pos * l1 + self.p2.pos * l2;
 
-                            let light_dir = (light.pos() - p).normalized();
-                            let intensity = n.dot(light_dir).max(0.0);
-                            let light_color = light.color();
-
-                            let color = [
-                                (light_color.0 * base_color.0 * intensity * 255.0) as u8,
-                                (light_color.1 * base_color.1 * intensity * 255.0) as u8,
-                                (light_color.2 * base_color.2 * intensity * 255.0) as u8,
-                                255,
-                            ];
-
+                            let color = self.color_for(n, p, light, material);
                             canvas.put_pixel(x, y, p.z, color);
                         }
                     }
@@ -208,5 +196,25 @@ impl Triangle {
                 e.x += e.inv_slope;
             }
         }
+    }
+
+    fn color_for(&self, n: Vector3, p: Point3, light: &Light, material: &Material) -> [u8; 4] {
+        let light_dir = (light.pos() - p).normalized();
+        let il = n.dot(light_dir).max(0.0);
+
+        let v = Vector3::new(0.0, 0.0, 1.0);
+        let r = n * (2.0 * n.dot(light_dir)) - light_dir;
+
+        let iz = v.dot(r).powi(material.m);
+
+        let intensity = (material.kd * il + material.ks * iz) * 255.0;
+
+        let light_color = light.color();
+        [
+            (light_color.r() * material.color.r() * intensity) as u8,
+            (light_color.g() * material.color.g() * intensity) as u8,
+            (light_color.b() * material.color.b() * intensity) as u8,
+            255,
+        ]
     }
 }

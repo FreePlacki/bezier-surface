@@ -191,3 +191,14 @@ impl Add<Vector3> for Vector3 {
         }
     }
 }
+
+impl Sub<Vector3> for Vector3 {
+    type Output = Self;
+    fn sub(self, rhs: Vector3) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}

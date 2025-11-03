@@ -69,7 +69,7 @@ impl eframe::App for PolygonApp {
                 ui.add(
                     Slider::new(&mut oz, -90.0..=90.0)
                         .suffix("°")
-                        .max_decimals(0),
+                        .fixed_decimals(0),
                 );
                 self.scene.rotate_oz(oz.to_radians() - self.scene.rot_oz());
 
@@ -82,6 +82,24 @@ impl eframe::App for PolygonApp {
                 ui.checkbox(&mut self.visible.polygon, "wielobok");
                 ui.checkbox(&mut self.visible.mesh, "siatka");
                 ui.checkbox(&mut self.visible.filling, "wypełnienie");
+
+                ui.separator();
+                ui.label("Matowość (kd)");
+                ui.add(Slider::new(&mut self.scene.material.kd, 0.0..=1.0).fixed_decimals(2));
+                ui.label("Połysk (ks)");
+                ui.add(Slider::new(&mut self.scene.material.ks, 0.0..=1.0).fixed_decimals(2));
+                ui.label("Wykładnik zwierciadlany (m)");
+                ui.add(Slider::new(&mut self.scene.material.m, 1..=100));
+
+                ui.label("Kolor powierzchni");
+                let mut col = self.scene.material_color();
+                ui.color_edit_button_rgb(&mut col);
+                self.scene.set_material_color(col);
+
+                ui.label("Kolor światła");
+                let mut col = self.scene.light_color();
+                ui.color_edit_button_rgb(&mut col);
+                self.scene.set_light_color(col);
             });
 
         self.canvas.clear(None);
