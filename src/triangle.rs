@@ -1,18 +1,23 @@
 use eframe::egui::{Color32, Painter, Pos2, Stroke, pos2};
 
 use crate::{
-    canvas::Canvas, light::Light, material::Material, point::{Point3, Vector3}
+    canvas::Canvas,
+    light::Light,
+    material::Material,
+    point::{Point3, Vector3},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vertex {
     pos: Point3,
     normal: Vector3,
+    u: f32,
+    v: f32,
 }
 
 impl Vertex {
-    pub fn new(pos: Point3, normal: Vector3) -> Self {
-        Self { pos, normal }
+    pub fn new(pos: Point3, normal: Vector3, u: f32, v: f32) -> Self {
+        Self { pos, normal, u, v }
     }
 
     pub fn rotate_ox(&mut self, rot: f32) {
@@ -180,8 +185,10 @@ impl Triangle {
                                 (self.p0.normal * l0 + self.p1.normal * l1 + self.p2.normal * l2)
                                     .normalized();
                             let p = self.p0.pos * l0 + self.p1.pos * l1 + self.p2.pos * l2;
+                            let u = self.p0.u * l0 + self.p1.u * l1 + self.p2.u * l2;
+                            let v = self.p0.v * l0 + self.p1.v * l1 + self.p2.v * l2;
 
-                            let color = self.color_for(n, p, light, material);
+                            let color = self.color_for(u, v, n, p, light, material);
                             canvas.put_pixel(x, y, p.z, color);
                         }
                     }
@@ -196,21 +203,21 @@ impl Triangle {
         }
     }
 
-    fn color_for(&self, n: Vector3, p: Point3, light: &Light, material: &Material) -> [u8; 4] {
+    fn color_for(&self, u: f32, v: f32, n: Vector3, p: Point3, light: &Light, material: &Material) -> [u8; 4] {
         let light_dir = (light.pos - p).normalized();
         let il = n.dot(light_dir).max(0.0);
 
-        let v = Vector3::new(0.0, 0.0, 1.0);
         let r = n * (2.0 * n.dot(light_dir)) - light_dir;
 
-        let iz = v.dot(r).powi(material.m);
+        let iz = Vector3::new(0.0, 0.0, 1.0).dot(r).powi(material.m);
 
         let intensity = (material.kd * il + material.ks * iz) * 255.0;
 
+        let col = material.color_at(u, v);
         [
-            (light.color.r() * material.color.r() * intensity).min(255.0) as u8,
-            (light.color.g() * material.color.g() * intensity).min(255.0) as u8,
-            (light.color.b() * material.color.b() * intensity).min(255.0) as u8,
+            (light.color.r() * col.r() * intensity).min(255.0) as u8,
+            (light.color.g() * col.g() * intensity).min(255.0) as u8,
+            (light.color.b() * col.b() * intensity).min(255.0) as u8,
             255,
         ]
     }

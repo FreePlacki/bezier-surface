@@ -10,6 +10,7 @@ mod mesh;
 mod point;
 mod scene;
 mod color;
+mod texture;
 mod surface;
 mod triangle;
 

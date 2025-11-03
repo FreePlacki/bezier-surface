@@ -72,7 +72,7 @@ impl BezierSurface {
             }
         }
         let n = du.cross(dv).normalized();
-        Vertex::new(p, n)
+        Vertex::new(p, n, u, v)
     }
 
     pub fn triangulate(&self, resolution: usize) -> Mesh {

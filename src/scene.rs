@@ -2,13 +2,22 @@ use std::{
     f32::consts::{FRAC_PI_2, PI},
     fs::File,
     io::Read,
+    path::PathBuf,
     str::FromStr,
 };
 
 use eframe::egui::{Color32, Painter, Stroke};
 
-use crate::{canvas::Canvas, color::Color, light::Light, material::Material, mesh::Mesh, point::Point3, surface::BezierSurface};
-
+use crate::{
+    canvas::Canvas,
+    color::Color,
+    light::Light,
+    material::{Coloring, Material},
+    mesh::Mesh,
+    point::Point3,
+    surface::BezierSurface,
+    texture::Texture,
+};
 
 pub struct Scene {
     pub material: Material,
@@ -83,11 +92,14 @@ impl Scene {
     }
 
     pub fn material_color(&self) -> [f32; 3] {
-        self.material.color.as_slice()
+        match self.material.coloring {
+            Coloring::Solid(c) => c.as_slice(),
+            Coloring::Texture(_) => [0.0, 0.0, 0.0],
+        }
     }
 
     pub fn set_material_color(&mut self, color: [f32; 3]) {
-        self.material.color = Color::from_slice(color);
+        self.material.coloring = Coloring::Solid(Color::from_slice(color));
     }
 
     pub fn light_color(&self) -> [f32; 3] {
@@ -96,6 +108,14 @@ impl Scene {
 
     pub fn set_light_color(&mut self, color: [f32; 3]) {
         self.light.color = Color::from_slice(color);
+    }
+
+    pub fn set_texture(&mut self, path: PathBuf) {
+        if let Ok(img) = image::open(path) {
+            let img = img.to_rgba8();
+            let texture = Texture::from_img(img);
+            self.material.coloring = Coloring::Texture(texture);
+        }
     }
 
     pub fn set_mesh_resolution(&mut self, res: usize) {
