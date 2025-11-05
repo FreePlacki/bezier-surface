@@ -159,6 +159,17 @@ impl Add<Point3> for Point3 {
     }
 }
 
+impl Add<Vector3> for Point3 {
+    type Output = Self;
+    fn add(self, rhs: Vector3) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
 impl Sub<Point3> for Point3 {
     type Output = Vector3;
     fn sub(self, rhs: Point3) -> Self::Output {

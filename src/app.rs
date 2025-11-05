@@ -1,6 +1,6 @@
 use std::{
     process::exit,
-    sync::mpsc::{self, Sender},
+    sync::mpsc,
 };
 
 use eframe::egui::{self, Context, Slider, Ui};
@@ -12,6 +12,7 @@ struct Visible {
     mesh: bool,
     filling: bool,
     light_pos: bool,
+    normals: bool,
 }
 
 impl Default for Visible {
@@ -21,6 +22,7 @@ impl Default for Visible {
             mesh: false,
             filling: true,
             light_pos: true,
+            normals: false,
         }
     }
 }
@@ -86,6 +88,7 @@ impl PolygonApp {
         ui.checkbox(&mut self.visible.mesh, "siatka");
         ui.checkbox(&mut self.visible.filling, "wypełnienie");
         ui.checkbox(&mut self.visible.light_pos, "pozycja światła");
+        ui.checkbox(&mut self.visible.normals, "wektory normalne");
     }
 
     fn surface_props(&mut self, ui: &mut Ui) {
@@ -97,7 +100,7 @@ impl PolygonApp {
         ui.add(Slider::new(&mut self.scene.material.m, 1..=100));
     }
 
-    fn pick_image(&mut self, tx: Sender<String>) {
+    fn pick_image(&mut self, tx: mpsc::Sender<String>) {
         std::thread::spawn(move || {
             // https://docs.rs/image/latest/image/codecs/index.html#supported-formats
             if let Some(path) = rfd::FileDialog::new()
@@ -245,7 +248,7 @@ impl eframe::App for PolygonApp {
             }
 
             if self.visible.filling {
-                self.scene.draw_fillings(&mut self.canvas);
+                self.scene.draw_fillings(&mut self.canvas, self.visible.normals);
                 self.canvas.draw(ctx, &painter);
             }
             if self.visible.mesh {

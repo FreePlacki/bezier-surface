@@ -94,7 +94,13 @@ impl Triangle {
         (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
     }
 
-    pub fn draw_filling(&self, canvas: &mut Canvas, light: &Light, material: &Material) {
+    pub fn draw_filling(
+        &self,
+        canvas: &mut Canvas,
+        light: &Light,
+        material: &Material,
+        draw_normals: bool,
+    ) {
         let v0 = self.p0.pos.to_screen(canvas).projection();
         let v1 = self.p1.pos.to_screen(canvas).projection();
         let v2 = self.p2.pos.to_screen(canvas).projection();
@@ -205,11 +211,14 @@ impl Triangle {
                             let u = baryc.interp(self.p0.u, self.p1.u, self.p2.u);
                             let v = baryc.interp(self.p0.v, self.p1.v, self.p2.v);
 
-                            let n = baryc
-                                .interp(self.p0.normal, self.p1.normal, self.p2.normal);
+                            let n = baryc.interp(self.p0.normal, self.p1.normal, self.p2.normal);
                             let pu = baryc.interp(self.p0.pu, self.p1.pu, self.p2.pu);
                             let pv = baryc.interp(self.p0.pv, self.p1.pv, self.p2.pv);
                             let n = material.normal_at(u, v, pu, pv, n).normalized();
+
+                            if draw_normals {
+                                self.draw_normals(canvas, x, y, n, p);
+                            }
 
                             let color = self.color_for(u, v, n, p, light, material);
                             canvas.put_pixel(x, y, p.z, color);
@@ -251,5 +260,22 @@ impl Triangle {
             (light.color.b() * col.b() * intensity).min(255.0) as u8,
             255,
         ]
+    }
+
+    fn draw_normals(&self, canvas: &mut Canvas, x: usize, y: usize, n: Vector3, p: Point3) {
+        let density = 10;
+        if x.is_multiple_of(density) && y.is_multiple_of(density) {
+            let len = 10;
+            for i in 0..=len {
+                let p = p + n * (i as f32);
+                let sc = p.to_screen(canvas);
+                let col = if i == len {
+                    [0, 0, 255, 255]
+                } else {
+                    [255, 0, 0, 255]
+                };
+                canvas.put_pixel(sc.x as usize, sc.y as usize, sc.z, col);
+            }
+        }
     }
 }

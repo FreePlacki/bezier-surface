@@ -41,9 +41,15 @@ impl Mesh {
             .for_each(|t| t.draw_outline(canvas, painter));
     }
 
-    pub fn draw_fillings(&self, canvas: &mut Canvas, light: &Light, material: &Material) {
+    pub fn draw_fillings(
+        &self,
+        canvas: &mut Canvas,
+        light: &Light,
+        material: &Material,
+        draw_normals: bool,
+    ) {
         self.triangles
             .iter()
-            .for_each(|t| t.draw_filling(canvas, light, material));
+            .for_each(|t| t.draw_filling(canvas, light, material, draw_normals));
     }
 }

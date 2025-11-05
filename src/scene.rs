@@ -130,8 +130,8 @@ impl Scene {
         self.mesh = self.surface.triangulate(res);
     }
 
-    pub fn draw_fillings(&self, canvas: &mut Canvas) {
-        self.mesh.draw_fillings(canvas, &self.light, &self.material);
+    pub fn draw_fillings(&self, canvas: &mut Canvas, draw_normals: bool) {
+        self.mesh.draw_fillings(canvas, &self.light, &self.material, draw_normals);
     }
 
     pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
