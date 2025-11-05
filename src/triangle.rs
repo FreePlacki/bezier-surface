@@ -203,7 +203,7 @@ impl Triangle {
                         for x in x0..=x1 {
                             let xf = x as f32;
                             let yf = scan_y as f32;
-                            let Pos2 { x: xf, y: yf } = canvas.from_screen(pos2(xf, yf));
+                            let Pos2 { x: xf, y: yf } = canvas.pos_from_screen(pos2(xf, yf));
 
                             let baryc = Baryc::new(self, xf, yf, self.determinant());
 

@@ -52,7 +52,7 @@ impl Canvas {
         self.depths.fill(f32::NEG_INFINITY);
     }
 
-    pub fn from_screen(&self, pos: Pos2) -> Pos2 {
+    pub fn pos_from_screen(&self, pos: Pos2) -> Pos2 {
         pos2(
             pos.x - (self.width as f32) * 0.5,
             (self.height as f32) * 0.5 - pos.y,

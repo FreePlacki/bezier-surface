@@ -27,7 +27,7 @@ impl Point3 {
         }
     }
 
-    pub fn to_screen(&self, canvas: &Canvas) -> Self {
+    pub fn to_screen(self, canvas: &Canvas) -> Self {
         Self {
             x: self.x + (canvas.width() as f32) * 0.5,
             y: -self.y + (canvas.height() as f32) * 0.5,

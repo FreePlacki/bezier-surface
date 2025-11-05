@@ -128,10 +128,9 @@ impl FromStr for BezierSurface {
         let mut points = [[Point3::origin(); 4]; 4];
         let mut lines = s.lines().filter(|l| l.len() > 2); // TODO: better way to filter empty
 
-        for y in 0..4 {
-            for x in 0..4 {
-                let p: Point3 = lines.next().ok_or("expected point3")?.parse()?;
-                points[y][x] = p;
+        for row in points.iter_mut() {
+            for p in row.iter_mut() {
+                *p = lines.next().ok_or("expected point3")?.parse()?;
             }
         }
 

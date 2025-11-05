@@ -7,9 +7,9 @@ pub struct Color {
 
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
-        debug_assert!(r >= 0.0 && r <= 1.0);
-        debug_assert!(g >= 0.0 && g <= 1.0);
-        debug_assert!(b >= 0.0 && b <= 1.0);
+        debug_assert!((0.0..=1.0).contains(&r));
+        debug_assert!((0.0..=1.0).contains(&g));
+        debug_assert!((0.0..=1.0).contains(&b));
 
         Self { r, g, b }
     }

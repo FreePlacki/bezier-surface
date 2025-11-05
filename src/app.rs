@@ -1,7 +1,4 @@
-use std::{
-    process::exit,
-    sync::mpsc,
-};
+use std::{process::exit, sync::mpsc};
 
 use eframe::egui::{self, Context, Slider, Ui};
 
@@ -133,11 +130,11 @@ impl PolygonApp {
             }
         });
 
-        if let Some(rx) = &self.rx_tex {
-            if let Ok(path) = rx.try_recv() {
-                self.scene.set_texture(path.into());
-                self.rx_tex = None;
-            }
+        if let Some(rx) = &self.rx_tex
+            && let Ok(path) = rx.try_recv()
+        {
+            self.scene.set_texture(path.into());
+            self.rx_tex = None;
         }
     }
 
@@ -188,11 +185,11 @@ impl PolygonApp {
             }
         });
 
-        if let Some(rx) = &self.rx_nor {
-            if let Ok(path) = rx.try_recv() {
-                self.scene.set_normal_map(path.into());
-                self.rx_nor = None;
-            }
+        if let Some(rx) = &self.rx_nor
+            && let Ok(path) = rx.try_recv()
+        {
+            self.scene.set_normal_map(path.into());
+            self.rx_nor = None;
         }
     }
 }
@@ -248,7 +245,8 @@ impl eframe::App for PolygonApp {
             }
 
             if self.visible.filling {
-                self.scene.draw_fillings(&mut self.canvas, self.visible.normals);
+                self.scene
+                    .draw_fillings(&mut self.canvas, self.visible.normals);
                 self.canvas.draw(ctx, &painter);
             }
             if self.visible.mesh {

@@ -135,7 +135,7 @@ impl Scene {
     }
 
     pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
-        self.mesh.draw_outlines(canvas, &painter);
+        self.mesh.draw_outlines(canvas, painter);
     }
 
     pub fn draw_light_pos(&self, canvas: &Canvas, painter: &Painter) {
@@ -149,6 +149,6 @@ impl Scene {
     }
 
     pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
-        self.surface.draw_points(canvas, &painter);
+        self.surface.draw_points(canvas, painter);
     }
 }
