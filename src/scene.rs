@@ -39,7 +39,7 @@ impl Scene {
         let mut s = Self {
             surface,
             mesh,
-            light: Light::new(Point3::new(-600.0, 700.0, 0.0), Color::new(1.0, 1.0, 1.0)),
+            light: Light::new(Point3::new(-600.0, 700.0, 300.0), Color::new(1.0, 1.0, 1.0)),
             material: Material::default(),
             rot_ox: 0.0,
             rot_oz: 0.0,
@@ -131,24 +131,35 @@ impl Scene {
     }
 
     pub fn draw_fillings(&self, canvas: &mut Canvas, draw_normals: bool) {
-        self.mesh.draw_fillings(canvas, &self.light, &self.material, draw_normals);
+        self.mesh
+            .draw_fillings(canvas, &self.light, &self.material, draw_normals);
     }
 
-    pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
-        self.mesh.draw_outlines(canvas, painter);
+    pub fn draw_outlines(&self, painter: &Painter) {
+        self.mesh.draw_outlines(painter);
     }
 
-    pub fn draw_light_pos(&self, canvas: &Canvas, painter: &Painter) {
+    pub fn draw_light_pos(&self, painter: &Painter) {
+        let stroke = Stroke::new(3.0, Color32::YELLOW);
+        let pos = self
+            .light
+            .pos
+            .to_viewport_center(painter.ctx())
+            .projection();
+
+        painter.circle_filled(pos, 6.0, stroke.color);
         painter.line(
             vec![
-                self.light.pos.to_screen(canvas).projection(),
-                Point3::origin().to_screen(canvas).projection(),
+                pos,
+                Point3::origin()
+                    .to_viewport_center(painter.ctx())
+                    .projection(),
             ],
-            Stroke::new(3.0, Color32::YELLOW),
+            stroke,
         );
     }
 
-    pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
-        self.surface.draw_points(canvas, painter);
+    pub fn draw_points(&self, painter: &Painter) {
+        self.surface.draw_points(painter);
     }
 }

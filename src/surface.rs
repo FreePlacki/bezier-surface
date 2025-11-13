@@ -3,7 +3,6 @@ use std::str::FromStr;
 use eframe::egui::{Color32, Painter, Stroke, pos2};
 
 use crate::{
-    canvas::Canvas,
     mesh::Mesh,
     point::{Point3, Vector3},
     triangle::{Triangle, Vertex},
@@ -58,15 +57,9 @@ impl BezierSurface {
                 let dbu = deriv(i, u);
                 let pt = self.points[j][i];
                 let w = bu * bv;
-                p.x += pt.x * w;
-                p.y += pt.y * w;
-                p.z += pt.z * w;
-                pu.x += pt.x * dbu * bv;
-                pu.y += pt.y * dbu * bv;
-                pu.z += pt.z * dbu * bv;
-                pv.x += pt.x * bu * dbv;
-                pv.y += pt.y * bu * dbv;
-                pv.z += pt.z * bu * dbv;
+                p = p + pt * w;
+                pu = pu + pt * dbu * bv;
+                pv = pv + pt * bu * dbv;
             }
         }
         let n = pu.cross(pv).normalized();
@@ -95,14 +88,15 @@ impl BezierSurface {
         Mesh::new(triangles, resolution)
     }
 
-    pub fn draw_points(&self, canvas: &Canvas, painter: &Painter) {
+    pub fn draw_points(&self, painter: &Painter) {
+        let ctx = painter.ctx();
         for y in 0..4 {
             for x in 0..4 {
-                let p = self.points[y][x].to_screen(canvas);
+                let p = self.points[y][x].to_viewport_center(ctx);
                 painter.circle_filled(pos2(p.x, p.y), 6.0, Color32::RED);
 
                 if x + 1 < 4 {
-                    let p_next = self.points[y][x + 1].to_screen(canvas);
+                    let p_next = self.points[y][x + 1].to_viewport_center(ctx);
                     painter.line_segment(
                         [pos2(p.x, p.y), pos2(p_next.x, p_next.y)],
                         Stroke::new(1.0, Color32::LIGHT_RED),
@@ -110,7 +104,7 @@ impl BezierSurface {
                 }
 
                 if y + 1 < 4 {
-                    let p_next = self.points[y + 1][x].to_screen(canvas);
+                    let p_next = self.points[y + 1][x].to_viewport_center(ctx);
                     painter.line_segment(
                         [pos2(p.x, p.y), pos2(p_next.x, p_next.y)],
                         Stroke::new(1.0, Color32::LIGHT_RED),

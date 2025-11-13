@@ -35,10 +35,10 @@ impl Mesh {
         });
     }
 
-    pub fn draw_outlines(&self, canvas: &Canvas, painter: &Painter) {
+    pub fn draw_outlines(&self, painter: &Painter) {
         self.triangles
             .iter()
-            .for_each(|t| t.draw_outline(canvas, painter));
+            .for_each(|t| t.draw_outline(painter));
     }
 
     pub fn draw_fillings(

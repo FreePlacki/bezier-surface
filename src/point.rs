@@ -3,7 +3,7 @@ use std::{
     str::FromStr,
 };
 
-use eframe::egui::{Pos2, pos2};
+use eframe::egui::{self, Pos2, pos2};
 
 use crate::canvas::Canvas;
 
@@ -31,6 +31,15 @@ impl Point3 {
         Self {
             x: self.x + (canvas.width() as f32) * 0.5,
             y: -self.y + (canvas.height() as f32) * 0.5,
+            z: self.z,
+        }
+    }
+
+    pub fn to_viewport_center(self, ctx: &egui::Context) -> Self {
+        let sz = ctx.used_size();
+        Self {
+            x: self.x + sz.x * 0.5,
+            y: -self.y + sz.y * 0.5,
             z: self.z,
         }
     }
@@ -162,6 +171,17 @@ impl Add<Point3> for Point3 {
 impl Add<Vector3> for Point3 {
     type Output = Self;
     fn add(self, rhs: Vector3) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl Add<Point3> for Vector3 {
+    type Output = Self;
+    fn add(self, rhs: Point3) -> Self::Output {
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,

@@ -75,12 +75,12 @@ impl Triangle {
         Self { p0, p1, p2 }
     }
 
-    pub fn draw_outline(&self, canvas: &Canvas, painter: &Painter) {
+    pub fn draw_outline(&self, painter: &Painter) {
         let stroke = Stroke::new(1.0, Color32::LIGHT_GREEN);
 
-        let p0 = self.p0.pos.to_screen(canvas).projection();
-        let p1 = self.p1.pos.to_screen(canvas).projection();
-        let p2 = self.p2.pos.to_screen(canvas).projection();
+        let p0 = self.p0.pos.to_viewport_center(painter.ctx()).projection();
+        let p1 = self.p1.pos.to_viewport_center(painter.ctx()).projection();
+        let p2 = self.p2.pos.to_viewport_center(painter.ctx()).projection();
         painter.line(vec![p0, p1], stroke);
         painter.line(vec![p1, p2], stroke);
         painter.line(vec![p2, p0], stroke);

@@ -42,7 +42,7 @@ impl PolygonApp {
                 exit(1)
             }
             Ok(scene) => Self {
-                canvas: Canvas::new(600, 600),
+                canvas: Canvas::new(800, 800),
                 scene,
                 visible: Visible::default(),
                 rx_tex: None,
@@ -250,13 +250,13 @@ impl eframe::App for PolygonApp {
                 self.canvas.draw(ctx, &painter);
             }
             if self.visible.mesh {
-                self.scene.draw_outlines(&self.canvas, &painter);
+                self.scene.draw_outlines(&painter);
             }
             if self.visible.polygon {
-                self.scene.draw_points(&self.canvas, &painter);
+                self.scene.draw_points(&painter);
             }
             if self.visible.light_pos {
-                self.scene.draw_light_pos(&self.canvas, &painter);
+                self.scene.draw_light_pos(&painter);
             }
         });
         ctx.request_repaint();

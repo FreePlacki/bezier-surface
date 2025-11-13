@@ -76,9 +76,11 @@ impl Canvas {
 
         let size = vec2(self.width as f32, self.height as f32);
 
+        let used_sz = ctx.used_size();
+        let pos = (used_sz - size) * 0.5;
         painter.image(
             tex.id(),
-            Rect::from_min_size(pos2(0.0, 0.0), size),
+            Rect::from_min_size(pos.to_pos2(), size),
             Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
             eframe::egui::Color32::WHITE,
         );
