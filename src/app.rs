@@ -1,6 +1,6 @@
 use std::{process::exit, sync::mpsc};
 
-use eframe::egui::{self, Context, Slider, Ui};
+use eframe::egui::{self, Context, Slider, Ui, Visuals};
 
 use crate::{canvas::Canvas, scene::Scene};
 
@@ -196,7 +196,10 @@ impl PolygonApp {
 
 impl eframe::App for PolygonApp {
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
-        ctx.style_mut(|style| style.wrap_mode = Some(egui::TextWrapMode::Extend));
+        ctx.style_mut(|style| {
+            style.wrap_mode = Some(egui::TextWrapMode::Extend);
+            style.visuals = Visuals::dark();
+        });
 
         egui::TopBottomPanel::top("menu").show(ctx, |ui| {
             ui.horizontal(|ui| {
