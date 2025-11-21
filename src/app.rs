@@ -34,7 +34,7 @@ pub struct PolygonApp {
 
 impl PolygonApp {
     pub fn new() -> Self {
-        let fname = "points.txt";
+        let fname = std::env::args().skip(1).next();
         let scene = Scene::from_file(fname);
         match scene {
             Err(e) => {

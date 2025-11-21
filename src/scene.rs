@@ -29,11 +29,17 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn from_file(name: &str) -> Result<Self, String> {
-        let mut f = File::open(name).map_err(|e| e.to_string())?;
-        let mut buf = String::new();
-        f.read_to_string(&mut buf).map_err(|e| e.to_string())?;
-        let surface = BezierSurface::from_str(&buf)?;
+    pub fn from_file(name: Option<String>) -> Result<Self, String> {
+        let points_str = if let Some(name) = name {
+            let mut f = File::open(name).map_err(|e| e.to_string())?;
+            let mut buf = String::new();
+            f.read_to_string(&mut buf).map_err(|e| e.to_string())?;
+            buf
+        } else {
+            eprintln!("No points file provided, using default.");
+            include_str!("../assets/points.txt").to_string()
+        };
+        let surface = BezierSurface::from_str(&points_str)?;
         let mesh = surface.triangulate(30);
 
         let mut s = Self {
