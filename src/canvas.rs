@@ -30,7 +30,9 @@ impl Canvas {
     }
 
     pub fn put_pixel(&mut self, x: usize, y: usize, z: f32, rgba: [u8; 4]) {
-        debug_assert!(x < self.width && y < self.height);
+        if x >= self.width || y >= self.height {
+            return;
+        }
 
         let idx = y * self.width + x;
         if z > self.depths[idx] {

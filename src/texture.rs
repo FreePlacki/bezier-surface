@@ -32,7 +32,7 @@ impl Texture {
     /// from r, g, b respectively
     pub fn sample_normal(&self, u: f32, v: f32) -> Vector3 {
         let col = self.sample(u, v);
-        let map = |c| (c * 2.0 - 255.0) / 255.0;
+        let map = |c| (c / 255.0 - 0.5) * 2.0;
         Vector3 {
             x: map(col[0] as f32),
             y: map(col[1] as f32),

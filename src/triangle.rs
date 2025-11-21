@@ -31,11 +31,15 @@ impl Vertex {
 
     pub fn rotate_ox(&mut self, rot: f32) {
         self.pos.rotate_ox(rot);
+        self.pu.rotate_ox(rot);
+        self.pv.rotate_ox(rot);
         self.normal.rotate_ox(rot);
     }
 
     pub fn rotate_oz(&mut self, rot: f32) {
         self.pos.rotate_oz(rot);
+        self.pu.rotate_oz(rot);
+        self.pv.rotate_oz(rot);
         self.normal.rotate_oz(rot);
     }
 }
@@ -211,9 +215,9 @@ impl Triangle {
                             let u = baryc.interp(self.p0.u, self.p1.u, self.p2.u);
                             let v = baryc.interp(self.p0.v, self.p1.v, self.p2.v);
 
-                            let n = baryc.interp(self.p0.normal, self.p1.normal, self.p2.normal);
-                            let pu = baryc.interp(self.p0.pu, self.p1.pu, self.p2.pu);
-                            let pv = baryc.interp(self.p0.pv, self.p1.pv, self.p2.pv);
+                            let n = baryc.interp(self.p0.normal, self.p1.normal, self.p2.normal).normalized();
+                            let pu = baryc.interp(self.p0.pu, self.p1.pu, self.p2.pu).normalized();
+                            let pv = baryc.interp(self.p0.pv, self.p1.pv, self.p2.pv).normalized();
                             let n = material.normal_at(u, v, pu, pv, n).normalized();
 
                             if draw_normals {
