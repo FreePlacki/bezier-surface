@@ -192,6 +192,29 @@ impl PolygonApp {
             self.rx_nor = None;
         }
     }
+
+    fn surface_animation(&mut self, ctx: &Context, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            ui.label("Animacja powierzchni");
+            if self.scene.is_animating_surface {
+                let dt = ctx.input(|i| i.stable_dt);
+                self.scene.advance_surface_animation(dt);
+
+                if ui.button("⏸").clicked() {
+                    self.scene.is_animating_surface = false;
+                }
+            } else {
+                if ui.button("▶").clicked() {
+                    self.scene.is_animating_surface = true;
+                }
+            }
+        });
+    }
+
+    fn light_kind(&mut self, ui: &mut Ui) {
+        ui.label("Typ światła (r = 0 dla punktowego)");
+        ui.add(Slider::new(&mut self.scene.light.r, 0..=30));
+    }
 }
 
 impl eframe::App for PolygonApp {
@@ -230,6 +253,10 @@ impl eframe::App for PolygonApp {
                 ui.separator();
                 self.light_props(ui);
                 self.light_animation(ctx, ui);
+                self.light_kind(ui);
+
+                ui.separator();
+                self.surface_animation(ctx, ui);
             });
 
         self.canvas.clear(None);

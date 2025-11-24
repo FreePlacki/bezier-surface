@@ -201,6 +201,17 @@ impl Sub<Point3> for Point3 {
     }
 }
 
+impl Sub<Point3> for Vector3 {
+    type Output = Self;
+    fn sub(self, rhs: Point3) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
 impl Mul<f32> for Vector3 {
     type Output = Self;
     fn mul(self, rhs: f32) -> Self::Output {

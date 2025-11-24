@@ -22,8 +22,10 @@ use crate::{
 pub struct Scene {
     pub material: Material,
     pub light: Light,
+    pub is_animating_surface: bool,
     surface: BezierSurface,
     mesh: Mesh,
+    resolution: usize,
     rot_ox: f32,
     rot_oz: f32,
 }
@@ -40,13 +42,16 @@ impl Scene {
             include_str!("../assets/points.txt").to_string()
         };
         let surface = BezierSurface::from_str(&points_str)?;
-        let mesh = surface.triangulate(30);
+        let resolution = 30;
+        let mesh = surface.triangulate(resolution);
 
         let mut s = Self {
             surface,
             mesh,
             light: Light::new(Point3::new(-600.0, 700.0, 300.0), Color::new(1.0, 1.0, 1.0)),
             material: Material::default(),
+            is_animating_surface: true,
+            resolution,
             rot_ox: 0.0,
             rot_oz: 0.0,
         };
@@ -133,6 +138,7 @@ impl Scene {
     }
 
     pub fn set_mesh_resolution(&mut self, res: usize) {
+        self.resolution = res;
         self.mesh = self.surface.triangulate(res);
     }
 
@@ -167,5 +173,10 @@ impl Scene {
 
     pub fn draw_points(&self, painter: &Painter) {
         self.surface.draw_points(painter);
+    }
+
+    pub fn advance_surface_animation(&mut self, dt: f32) {
+        self.surface.advance_animation(dt);
+        self.mesh = self.surface.triangulate(self.resolution);
     }
 }

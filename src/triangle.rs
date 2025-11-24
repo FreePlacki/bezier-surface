@@ -252,10 +252,14 @@ impl Triangle {
         let il = n.dot(light_dir).max(0.0);
 
         let r = n * (2.0 * n.dot(light_dir)) - light_dir;
-
         let iz = Vector3::new(0.0, 0.0, 1.0).dot(r).powi(material.m);
 
-        let intensity = (material.kd * il + material.ks * iz) * 255.0;
+        // reflector
+        let p2l = (light_dir - p).normalized();
+        let o2l = (Vector3::zeros() - light_dir).normalized();
+        let fac = p2l.dot(o2l).max(0.0).powi(light.r);
+
+        let intensity = fac * (material.kd * il + material.ks * iz) * 255.0;
 
         let col = material.color_at(u, v);
         [

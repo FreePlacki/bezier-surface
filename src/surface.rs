@@ -10,6 +10,8 @@ use crate::{
 
 pub struct BezierSurface {
     points: [[Point3; 4]; 4],
+    /// advancement in animation
+    t: f32,
 }
 
 impl BezierSurface {
@@ -113,6 +115,14 @@ impl BezierSurface {
             }
         }
     }
+
+    pub fn advance_animation(&mut self, dt: f32) {
+        self.t += dt;
+        if self.t > std::f32::consts::TAU {
+            self.t = 0.0;
+        }
+        self.points[1][1].y = 7e2 * self.t.sin();
+    }
 }
 
 impl FromStr for BezierSurface {
@@ -128,6 +138,6 @@ impl FromStr for BezierSurface {
             }
         }
 
-        Ok(Self { points })
+        Ok(Self { points, t: 0.0 })
     }
 }

@@ -7,6 +7,8 @@ pub struct Light {
     /// advancement in animation
     pub t: f32,
     pub is_animating: bool,
+    /// r = 0 for point light, otherwise I = I0 * cos^r(theta)
+    pub r: i32,
 }
 
 impl Light {
@@ -16,6 +18,7 @@ impl Light {
             color,
             t: 0.0,
             is_animating: true,
+            r: 0,
         }
     }
 
