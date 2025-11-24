@@ -100,6 +100,7 @@ impl PolygonApp {
     fn pick_image(&mut self, tx: mpsc::Sender<String>) {
         std::thread::spawn(move || {
             // https://docs.rs/image/latest/image/codecs/index.html#supported-formats
+            let current_dir = std::env::current_dir().unwrap_or_default();
             if let Some(path) = rfd::FileDialog::new()
                 .add_filter(
                     "image",
@@ -107,6 +108,7 @@ impl PolygonApp {
                         "png", "jpg", "gif", "bmp", "hdr", "ico", "jpeg", "pnm", "tiff", "webp",
                     ],
                 )
+                .set_directory(current_dir)
                 .pick_file()
             {
                 let s = path.display().to_string();
