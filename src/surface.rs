@@ -12,16 +12,22 @@ pub struct BezierSurface {
     points: [[Point3; 4]; 4],
     /// advancement in animation
     t: f32,
+    /// original position of animated point
+    orig_pos: Point3,
+    rot_ox: f32,
+    rot_oz: f32,
 }
 
 impl BezierSurface {
     pub fn rotate_ox(&mut self, delta: f32) {
+        self.rot_ox += delta;
         self.points
             .iter_mut()
             .for_each(|r| r.iter_mut().for_each(|p| p.rotate_ox(delta)));
     }
 
     pub fn rotate_oz(&mut self, delta: f32) {
+        self.rot_oz += delta;
         self.points
             .iter_mut()
             .for_each(|r| r.iter_mut().for_each(|p| p.rotate_oz(delta)));
@@ -121,7 +127,12 @@ impl BezierSurface {
         if self.t > std::f32::consts::TAU {
             self.t = 0.0;
         }
-        self.points[1][1].y = 7e2 * self.t.sin();
+
+        let mut v = Vector3::new(0.0, 1.0, 0.0) * 7e2 * self.t.sin();
+        v.rotate_ox(self.rot_ox);
+        v.rotate_oz(self.rot_oz);
+
+        self.points[1][1] = self.orig_pos + v;
     }
 }
 
@@ -130,7 +141,7 @@ impl FromStr for BezierSurface {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut points = [[Point3::origin(); 4]; 4];
-        let mut lines = s.lines().filter(|l| l.len() > 2); // TODO: better way to filter empty
+        let mut lines = s.lines().filter(|l| l.len() > 2);
 
         for row in points.iter_mut() {
             for p in row.iter_mut() {
@@ -138,6 +149,12 @@ impl FromStr for BezierSurface {
             }
         }
 
-        Ok(Self { points, t: 0.0 })
+        Ok(Self {
+            points,
+            t: 0.0,
+            orig_pos: points[1][1],
+            rot_ox: 0.0,
+            rot_oz: 0.0,
+        })
     }
 }

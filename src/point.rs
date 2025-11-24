@@ -1,5 +1,5 @@
 use std::{
-    ops::{Add, Mul, Sub},
+    ops::{Add, AddAssign, Mul, Sub},
     str::FromStr,
 };
 
@@ -176,6 +176,14 @@ impl Add<Vector3> for Point3 {
             y: self.y + rhs.y,
             z: self.z + rhs.z,
         }
+    }
+}
+
+impl AddAssign<Vector3> for Point3 {
+    fn add_assign(&mut self, rhs: Vector3) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
