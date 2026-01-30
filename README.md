@@ -1,4 +1,4 @@
-#[](https://github.com/FreePlacki/bezier-surface/assets/bezier.mp4)
+#[](https://github.com/FreePlacki/bezier-surface/assets/bezier.gif)
 
 # Bezier Surface
 
